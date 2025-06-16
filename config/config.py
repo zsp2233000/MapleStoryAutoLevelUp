@@ -59,7 +59,7 @@ class Config:
     # NameTag Recongnition
     # ────────────────
     # offset from the nametag's top-left corner to the player's center
-    nametag_offset = (-50, 30) # pixel
+    nametag_offset = (-20, 35) # pixel
     nametag_diff_thres = 0.4
 
     # ────────────────

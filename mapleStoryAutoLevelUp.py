@@ -1277,8 +1277,11 @@ class MapleStoryBot:
 
         # Special logic for each status, overwrite color code action
         if self.status == "hunting":
+            # Check MP ratio and switch to resting if too low
+            if self.mp_ratio < 0.1:
+                self.switch_status("resting")
             # Perform a random action when player stuck
-            if not self.args.patrol and self.is_player_stuck():
+            elif not self.args.patrol and self.is_player_stuck():
                 command = self.get_random_action()
             elif command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack or heal while character is on rope or jumping
