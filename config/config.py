@@ -195,4 +195,4 @@ class Config:
         (139, 69, 19): "teleport right" # brown
     }
 
-    window_size = (759, 1282)
+    window_size = (939, 1602)
