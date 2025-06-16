@@ -10,13 +10,13 @@ class Config:
     # Adjust the following key to match the in-game keybinding for your character.
 
     # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
-    aoe_skill_key = "q"
+    aoe_skill_key = "s"
 
     # Key to trigger the basic attack skill, like Mage's Magic Claw.
-    magic_claw_key = "w"
+    magic_claw_key = "s"
 
     # Key to trigger Mage's teleport skill
-    teleport_key = "e" # set to "", if need to disable teleport skill
+    teleport_key = "v" # set to "", if need to disable teleport skill
 
     # Key for jumping.
     jump_key = "space"
@@ -28,7 +28,7 @@ class Config:
     add_mp_key = "2"
 
     # Buff skill keys, e.g., magical sheild, angel blessing
-    buff_skill_keys     = ["s", "d", "f"]
+    buff_skill_keys     = ["5", "5", "5"]
     buff_skill_cooldown = [190, 140, 75] # Second
     buff_skill_active_duration = 1 # second
     # ────────────────
@@ -73,10 +73,10 @@ class Config:
     # Attack Settings
     # ────────────────
     # aoe skill attack range relative to player position
-    aoe_skill_range_x = 400 # pixels (horizontal range)
-    aoe_skill_range_y = 170  # pixels (vertical range)
+    aoe_skill_range_x = 180 # pixels (horizontal range)
+    aoe_skill_range_y = 70  # pixels (vertical range)
     # magic claw skill attack range relative to player position
-    magic_claw_range_x = 350 # pixels (horizontal range)
+    magic_claw_range_x = 180 # pixels (horizontal range)
     magic_claw_range_y = 70  # pixels (vertical range)
     # attack cooldown time in seconds
     attack_cooldown = 0.05  # seconds between attacks
@@ -121,7 +121,7 @@ class Config:
     rune_detect_box_width = 120
     rune_detect_box_height = 150
     rune_detect_diff_thres = 0.1
-    rune_finding_timeout = 1200 # second
+    rune_finding_timeout = 300 # second
     rune_detect_level_coef = 0.1 # raise threshold for each level
     rune_detect_level_raise_interval = 60 # second
     near_rune_duration = 5 # second
@@ -143,8 +143,8 @@ class Config:
     mp_bar_bottom_right = (678, 749)
     exp_bar_top_left = (699, 732)
     exp_bar_bottom_right = (860, 749)
-    heal_ratio = 0.5 # heal when hp is below 50%
-    add_mp_ratio = 0.5 # drink potion when mp is below 50%
+    heal_ratio = 0 # heal when hp is below 50%
+    add_mp_ratio = 0 # drink potion when mp is below 50%
     # Health monitor cooldowns (to prevent spam)
     heal_cooldown = 0.5  # seconds between heals
     mp_cooldown = 0.5    # seconds between MP potions
@@ -195,4 +195,4 @@ class Config:
         (139, 69, 19): "teleport right" # brown
     }
 
-    window_size = (752, 1282)
+    window_size = (759, 1282)
