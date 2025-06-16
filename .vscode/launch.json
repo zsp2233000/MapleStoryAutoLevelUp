@@ -1,0 +1,222 @@
+{
+    "version": "0.2.0",
+    "configurations": [        
+        {
+            "name": "first_barrack",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "first_barrack",
+                "--monster",
+                "skeleton_officer,skeleton_soldier"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug MapleStory Bot - Cloud Balcony",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "cloud_balcony",
+                "--monster",
+                "brown_windup_bear,pink_windup_bear"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug MapleStory Bot - Ant Cave 2",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "ant_cave_2",
+                "--monster",
+                "skeleton_soldier,skeleton_officer"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug MapleStory Bot - Fire Land 2",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "fire_land_2",
+                "--monster",
+                "fire_pig"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Lost Time 1",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "lost_time_1",
+                "--monster",
+                "evolved_ghost",
+            ]
+        },
+        {
+            "name": "Debug MapleStory Bot - North Forest Training Ground 2",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "north_forest_training_ground_2",
+                "--monster",
+                "green_mushroom,mushroom"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug MapleStory Bot - North Forest Training Ground 8",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "north_forest_training_ground_8",
+                "--monster",
+                "black_axe_stump"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Legacy MapleStory Bot",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp_legacy.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Route Recorder",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/routeRecorder.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Map Scanner",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapScanner.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Game Window Capturor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/GameWindowCapturor.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Health Monitor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/HealthMonitor.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Keyboard Controller",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/KeyBoardController.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Current Python File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}",
+            "stopOnEntry": false,
+            "justMyCode": false
+        }
+    ]
+}
