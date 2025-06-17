@@ -68,6 +68,10 @@ class MapleStoryBot:
         self.is_patrol_to_left = True # Patrol direction flag
         self.patrol_turn_point_cnt = 0 # Patrol tuning back counter
 
+        # Simplified combat management
+        self.t_last_monster_seen = 0  # Last time we saw any monster
+        self.combat_delay = 1.0  # Seconds to wait after last monster before moving
+
         # Set status to hunting for startup
         self.switch_status("hunting")
 
@@ -1146,6 +1150,13 @@ class MapleStoryBot:
             # Get monster in skill range
             self.monster_info = self.get_monsters_in_range((x0, y0), (x1, y1))
 
+        # Simple combat state: if we see monsters, update the timer
+        if len(self.monster_info) > 0:
+            self.t_last_monster_seen = time.time()
+
+        # Check if we should stay in place (recently saw monsters)
+        should_stay_for_combat = (time.time() - self.t_last_monster_seen) < self.combat_delay
+
         # Get attack direction
         if self.args.attack == "aoe_skill":
             if len(self.monster_info) == 0:
@@ -1259,7 +1270,11 @@ class MapleStoryBot:
         else:
             # get color code from img_route
             color_code = self.get_nearest_color_code()
-            if color_code:
+            
+            # If we recently saw monsters, ignore movement commands
+            if should_stay_for_combat and color_code and color_code["action"] in ["walk left", "walk right", "teleport left", "teleport right"]:
+                command = "stop"  # Stay in place for combat
+            elif color_code:
                 if color_code["action"] == "goal":
                     # Switch to next route map
                     self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
@@ -1280,8 +1295,8 @@ class MapleStoryBot:
             # Check MP ratio and switch to resting if too low
             if self.mp_ratio < 0.1:
                 self.switch_status("resting")
-            # Perform a random action when player stuck
-            elif not self.args.patrol and self.is_player_stuck():
+            # Perform a random action when player stuck (but not if recently saw monsters)
+            elif not self.args.patrol and self.is_player_stuck() and not should_stay_for_combat:
                 command = self.get_random_action()
             elif command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack or heal while character is on rope or jumping
@@ -1329,6 +1344,12 @@ class MapleStoryBot:
         if command and len(command) > 0:
             cv2.putText(self.img_frame_debug, f"CMD: {command}",
                        (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        
+        # Debug: show combat state
+        if should_stay_for_combat:
+            time_since_monster = time.time() - self.t_last_monster_seen
+            cv2.putText(self.img_frame_debug, f"COMBAT WAIT: {time_since_monster:.1f}s",
+                       (10, 510), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
         #####################
         ### Debug Windows ###
