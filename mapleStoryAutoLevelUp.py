@@ -258,6 +258,22 @@ class MapleStoryBot:
         '''
         get_player_location_on_global_map
         '''
+        
+        map_h, map_w = self.img_map.shape[:2]
+        minimap_h, minimap_w = self.img_minimap.shape[:2]
+
+        # 調整 img_map 大小以匹配 img_minimap
+        if map_h != minimap_h or map_w != minimap_w:
+            self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
+
+        # 檢查小地圖尺寸是否有變化
+        if hasattr(self, 'last_minimap_size'):
+            last_w, last_h = self.last_minimap_size
+            if minimap_w != last_w or minimap_h != last_h:
+                print(f"注意: 小地圖尺寸已變化 {last_w}x{last_h} -> {minimap_w}x{minimap_h}")
+                # 當小地圖尺寸變化時，重新調整 img_map
+                self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
+
         self.loc_minimap_global, score, _ = find_pattern_sqdiff(
                                         self.img_map,
                                         self.img_minimap)

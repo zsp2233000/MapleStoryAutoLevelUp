@@ -298,7 +298,7 @@ def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 
                         minimap_player_color)
     coords = cv2.findNonZero(mask)
     if coords is None or len(coords) < 4:
-        logger.warning(f"Fail to locate player location on minimap.")
+        # logger.warning(f"Fail to locate player location on minimap.")
         return None
 
     # Calculate the average location of the matching pixels
