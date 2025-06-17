@@ -16,7 +16,7 @@ class Config:
     magic_claw_key = "s"
 
     # Key to trigger Mage's teleport skill
-    teleport_key = "v" # set to "", if need to disable teleport skill
+    teleport_key = "" # set to "", if need to disable teleport skill
 
     # Key for jumping.
     jump_key = "space"
@@ -35,7 +35,7 @@ class Config:
     # System
     # ────────────────
     # FPS(Frame per Second) limit for main thread
-    fps_limit = 10
+    fps_limit = 15
 
     # ────────────────
     # Mage Teleport
@@ -105,7 +105,7 @@ class Config:
     # ────────────────
     up_drag_duration = 1.0 # hold duration for 'up' key to prevent rope-sticking (in seconds)
     down_drag_duration = 1.0 # seconds
-    watch_dog_timeout = 10 # seconds, if player doesn't move for 3 second, random perform an action
+    watch_dog_timeout = 3 # seconds, if player doesn't move for 3 second, random perform an action
     watch_dog_range = 10 # pixel, if player location is smaller than watch_dog_range, consider it doesn't move
 
     # ────────────────
