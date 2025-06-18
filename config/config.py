@@ -10,10 +10,10 @@ class Config:
     # Adjust the following key to match the in-game keybinding for your character.
 
     # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
-    aoe_skill_key = "s"
+    aoe_skill_key = "r"
 
     # Key to trigger the basic attack skill, like Mage's Magic Claw.
-    magic_claw_key = "s"
+    magic_claw_key = "r"
 
     # Key to trigger Mage's teleport skill
     teleport_key = "" # set to "", if need to disable teleport skill
@@ -28,9 +28,47 @@ class Config:
     add_mp_key = "2"
 
     # Buff skill keys, e.g., magical sheild, angel blessing
-    buff_skill_keys     = ["5", "5", "5"]
-    buff_skill_cooldown = [190, 140, 75] # Second
+    buff_skill_keys     = ["0", "0", "0"]
+    buff_skill_cooldown = [300, 140, 75] # Second
     buff_skill_active_duration = 1 # second
+
+    # ────────────────
+    # NameTag Recongnition
+    # ────────────────
+    # offset from the nametag's top-left corner to the player's center
+    nametag_offset = (-35, 35) # pixel
+    nametag_diff_thres = 0.4
+
+    # ────────────────
+    # Attack Settings
+    # ────────────────
+    # aoe skill attack range relative to player position
+    aoe_skill_range_x = 240 # pixels (horizontal range)
+    aoe_skill_range_y = 70  # pixels (vertical range)
+    # magic claw skill attack range relative to player position
+    magic_claw_range_x = 240 # pixels (horizontal range)
+    magic_claw_range_y = 70  # pixels (vertical range)
+    # attack cooldown time in seconds
+    attack_cooldown = 0.05  # seconds between attacks
+    # character turn delay before attack
+    character_turn_delay = 0.02  # seconds to wait for character to turn before attacking
+
+    # ────────────────
+    # Edge Teleport
+    # ────────────────
+    # Mage can use teleport skill if they're too close to edge
+    is_edge_teleport = True
+    edge_teleport_box_width  = 20
+    edge_teleport_box_height = 10
+    edge_teleport_color_code = (255,127,127) # (R,G,B)
+
+    # ────────────────
+    # Camera
+    # ────────────────
+    # only use this vertical range of the screen to localize camera on map
+    camera_ceiling = 60  # pixel (top)
+    camera_floor = 665   # pixel (bottom)
+
     # ────────────────
     # System
     # ────────────────
@@ -45,43 +83,6 @@ class Config:
     is_use_teleport_to_walk = False
     # Mage's teleport skill cooldown
     teleport_cooldown = 1 # second
-
-    # ────────────────
-    # Edge Teleport
-    # ────────────────
-    # Mage can use teleport skill if they're too close to edge
-    is_edge_teleport = True
-    edge_teleport_box_width  = 20
-    edge_teleport_box_height = 10
-    edge_teleport_color_code = (255,127,127) # (R,G,B)
-
-    # ────────────────
-    # NameTag Recongnition
-    # ────────────────
-    # offset from the nametag's top-left corner to the player's center
-    nametag_offset = (-20, 35) # pixel
-    nametag_diff_thres = 0.4
-
-    # ────────────────
-    # Camera
-    # ────────────────
-    # only use this vertical range of the screen to localize camera on map
-    camera_ceiling = 60  # pixel (top)
-    camera_floor = 665   # pixel (bottom)
-
-    # ────────────────
-    # Attack Settings
-    # ────────────────
-    # aoe skill attack range relative to player position
-    aoe_skill_range_x = 180 # pixels (horizontal range)
-    aoe_skill_range_y = 70  # pixels (vertical range)
-    # magic claw skill attack range relative to player position
-    magic_claw_range_x = 180 # pixels (horizontal range)
-    magic_claw_range_y = 70  # pixels (vertical range)
-    # attack cooldown time in seconds
-    attack_cooldown = 0.05  # seconds between attacks
-    # character turn delay before attack
-    character_turn_delay = 0.02  # seconds to wait for character to turn before attacking
 
     # ────────────────
     # Monster Detection
