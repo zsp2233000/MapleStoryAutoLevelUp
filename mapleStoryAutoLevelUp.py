@@ -32,7 +32,7 @@ class MapleStoryBot:
         '''
         self.cfg = Config # Configuration
         self.args = args # User arguments
-        self.status = "hunting" # 'resting', 'finding_rune', 'near_rune'
+        self.status = "hunting" # 'resting', 'finding_rune', 'near_rune', 'attacking'
         self.idx_routes = 0 # Index of route map
         self.hp_ratio = 1.0 # HP bar ratio, [0.0 ~ 1.0]
         self.mp_ratio = 1.0 # MP bar ratio, [0.0 ~ 1.0]
@@ -67,6 +67,10 @@ class MapleStoryBot:
         # Patrol mode
         self.is_patrol_to_left = True # Patrol direction flag
         self.patrol_turn_point_cnt = 0 # Patrol tuning back counter
+
+        # Simplified combat management
+        self.t_last_monster_seen = 0  # Last time we saw any monster
+        self.combat_delay = 1.0  # Seconds to wait after last monster before moving
 
         # Set status to hunting for startup
         self.switch_status("hunting")
@@ -258,6 +262,22 @@ class MapleStoryBot:
         '''
         get_player_location_on_global_map
         '''
+        
+        map_h, map_w = self.img_map.shape[:2]
+        minimap_h, minimap_w = self.img_minimap.shape[:2]
+
+        # 調整 img_map 大小以匹配 img_minimap
+        if map_h != minimap_h or map_w != minimap_w:
+            self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
+
+        # 檢查小地圖尺寸是否有變化
+        if hasattr(self, 'last_minimap_size'):
+            last_w, last_h = self.last_minimap_size
+            if minimap_w != last_w or minimap_h != last_h:
+                print(f"注意: 小地圖尺寸已變化 {last_w}x{last_h} -> {minimap_w}x{minimap_h}")
+                # 當小地圖尺寸變化時，重新調整 img_map
+                self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
+
         self.loc_minimap_global, score, _ = find_pattern_sqdiff(
                                         self.img_map,
                                         self.img_minimap)
@@ -1146,6 +1166,22 @@ class MapleStoryBot:
             # Get monster in skill range
             self.monster_info = self.get_monsters_in_range((x0, y0), (x1, y1))
 
+        # 檢查攻擊範圍內是否有怪物，並切換狀態
+        has_monsters = self.has_monsters_in_attack_range()
+        
+        # 狀態切換邏輯
+        if has_monsters and self.status == "hunting":
+            self.switch_status("attacking")
+        elif not has_monsters and self.status == "attacking":
+            self.switch_status("hunting")
+
+        # Simple combat state: if we see monsters, update the timer
+        if len(self.monster_info) > 0:
+            self.t_last_monster_seen = time.time()
+
+        # Check if we should stay in place (recently saw monsters)
+        should_stay_for_combat = (time.time() - self.t_last_monster_seen) < self.combat_delay
+
         # Get attack direction
         if self.args.attack == "aoe_skill":
             if len(self.monster_info) == 0:
@@ -1257,20 +1293,21 @@ class MapleStoryBot:
                 command = "walk right"
 
         else:
-            # get color code from img_route
-            color_code = self.get_nearest_color_code()
-            if color_code:
-                if color_code["action"] == "goal":
-                    # Switch to next route map
-                    self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
-                    logger.debug(f"Change to new route:{self.idx_routes}")
-                command = color_code["action"]
+            # get color code from img_route (只在非attacking狀態下執行)
+            if self.status != "attacking":
+                color_code = self.get_nearest_color_code()
+                if color_code:
+                    if color_code["action"] == "goal":
+                        # Switch to next route map
+                        self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
+                        logger.debug(f"Change to new route:{self.idx_routes}")
+                    command = color_code["action"]
 
-            # teleport away from edge to avoid falling off cliff
-            if self.is_near_edge() and \
-                time.time() - self.t_last_teleport > self.cfg.teleport_cooldown:
-                command = command.replace("walk", "teleport")
-                self.t_last_teleport = time.time() # update timer
+                # teleport away from edge to avoid falling off cliff
+                if self.is_near_edge() and \
+                    time.time() - self.t_last_teleport > self.cfg.teleport_cooldown:
+                    command = command.replace("walk", "teleport")
+                    self.t_last_teleport = time.time() # update timer
 
         if self.cfg.teleport_key == "": # disable teleport skill
             command = command.replace("teleport", "jump")
@@ -1280,8 +1317,8 @@ class MapleStoryBot:
             # Check MP ratio and switch to resting if too low
             if self.mp_ratio < 0.1:
                 self.switch_status("resting")
-            # Perform a random action when player stuck
-            elif not self.args.patrol and self.is_player_stuck():
+            # Perform a random action when player stuck (but not if recently saw monsters)
+            elif not self.args.patrol and self.is_player_stuck() and not should_stay_for_combat:
                 command = self.get_random_action()
             elif command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack or heal while character is on rope or jumping
@@ -1298,6 +1335,23 @@ class MapleStoryBot:
                 time.time() - self.t_last_attack > self.cfg.attack_cooldown:
                 command = "attack right"
                 self.t_last_attack = time.time()
+
+        elif self.status == "attacking":
+            # 在attacking狀態下，只進行攻擊，不進行移動
+            if attack_direction == "I don't care" and nearest_monster is not None and \
+                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                command = "attack"
+                self.t_last_attack = time.time()
+            elif attack_direction == "left" and nearest_monster is not None and \
+                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                command = "attack left"
+                self.t_last_attack = time.time()
+            elif attack_direction == "right" and nearest_monster is not None and \
+                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                command = "attack right"
+                self.t_last_attack = time.time()
+            else:
+                command = "stop"  # 沒有可攻擊的怪物時停止移動
 
         elif self.status == "finding_rune":
             if self.is_player_stuck():
@@ -1329,6 +1383,12 @@ class MapleStoryBot:
         if command and len(command) > 0:
             cv2.putText(self.img_frame_debug, f"CMD: {command}",
                        (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        
+        # Debug: show combat state
+        if should_stay_for_combat:
+            time_since_monster = time.time() - self.t_last_monster_seen
+            cv2.putText(self.img_frame_debug, f"COMBAT WAIT: {time_since_monster:.1f}s",
+                       (10, 510), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
         #####################
         ### Debug Windows ###
@@ -1355,6 +1415,30 @@ class MapleStoryBot:
 
         # Enable cached location since second frame
         self.is_first_frame = False
+
+    def has_monsters_in_attack_range(self):
+        '''
+        檢查攻擊範圍內是否有怪物
+        
+        Returns:
+            bool: True if monsters are in attack range, False otherwise
+        '''
+        if self.args.attack == "aoe_skill":
+            # AOE技能範圍檢測
+            x0 = max(0, self.loc_player[0] - self.cfg.aoe_skill_range_x//2)
+            x1 = min(self.img_frame.shape[1], self.loc_player[0] + self.cfg.aoe_skill_range_x//2)
+            y0 = max(0, self.loc_player[1] - self.cfg.aoe_skill_range_y//2)
+            y1 = min(self.img_frame.shape[0], self.loc_player[1] + self.cfg.aoe_skill_range_y//2)
+            monsters = self.get_monsters_in_range((x0, y0), (x1, y1))
+            return len(monsters) > 0
+            
+        elif self.args.attack == "magic_claw":
+            # 魔法爪範圍檢測
+            monster_left = self.get_nearest_monster(is_left=True)
+            monster_right = self.get_nearest_monster(is_left=False)
+            return monster_left is not None or monster_right is not None
+            
+        return False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
