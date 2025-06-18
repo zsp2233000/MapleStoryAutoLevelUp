@@ -22,7 +22,7 @@ class Config:
     jump_key = "space"
 
     # Key to use a health potion.
-    heal_key = "q"
+    heal_key = "1"
 
     # Key to use a mana potion.
     add_mp_key = "2"
@@ -63,6 +63,15 @@ class Config:
     edge_teleport_box_width  = 20
     edge_teleport_box_height = 10
     edge_teleport_color_code = (255,127,127) # (R,G,B)
+
+    # Nametag template matching threshold.
+    # If the matching diff is smaller than <nametag_global_thres>
+    # it will only search area near the last frame nametag.
+    # If diff is bigger than <nametag_global_thres>, it will search the whole frame
+    # and get the best match.
+    # If you find the nametag is cached, but the location is incorrect.
+    # Disable this feature by setting nametag_global_thres = 0.0
+    nametag_global_thres = 0.2
 
     # ────────────────
     # Camera
@@ -156,6 +165,7 @@ class Config:
     # Mini-Map
     # ────────────────
     minimap_upscale_factor = 4 # upscale 4 time for debug route image
+    minimap_player_color = (136, 255, 255) # BGR
 
     # ────────────────
     # Patrol Mode

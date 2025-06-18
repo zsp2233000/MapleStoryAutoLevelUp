@@ -17,9 +17,12 @@ import cv2
 from config.config import Config
 from logger import logger
 from util import find_pattern_sqdiff, draw_rectangle, screenshot, nms, \
-                load_image, get_mask, get_minimap_loc_size, get_player_location_on_minimap
+                load_image, get_mask, get_minimap_loc_size, get_player_location_on_minimap, is_mac
 from KeyBoardController import KeyBoardController
-from GameWindowCapturor import GameWindowCapturor
+if is_mac():
+    from GameWindowCapturorForMac import GameWindowCapturor
+else:
+    from GameWindowCapturor import GameWindowCapturor
 from HealthMonitor import HealthMonitor
 
 class MapleStoryBot:
@@ -75,6 +78,14 @@ class MapleStoryBot:
         # Set status to hunting for startup
         self.switch_status("hunting")
 
+        # Overwrite config.py for macOS
+        # TODO: move custimized config to config_mac.py
+        if is_mac():
+            self.cfg.minimap_upscale_factor = 2 # Mac laptop typically has a smaller screen
+            self.cfg.game_window_title = 'MapleStory Worlds'
+            self.cfg.window_size = (776, 1280) # Set resolution to (1280x720) in game setting
+            self.cfg.monster_health_bar_color = (90, 201, 108) # (B,G,R)
+            self.cfg.minimap_player_color = (84, 255, 255) # BGR
         if args.patrol:
             # Patrol mode doesn't need map or route
             self.img_map = None
@@ -95,8 +106,8 @@ class MapleStoryBot:
                 load_image(f"minimaps/{args.map}/route_rest.png"), cv2.COLOR_BGR2RGB)
 
         # Load player's name tag
-        self.img_nametag = load_image("name_tag.png")
-        self.img_nametag_gray = load_image("name_tag.png", cv2.IMREAD_GRAYSCALE)
+        self.img_nametag = load_image(f"nametag/{args.nametag}.png")
+        self.img_nametag_gray = load_image(f"nametag/{args.nametag}.png", cv2.IMREAD_GRAYSCALE)
 
         # Load rune images from rune/
         self.img_rune_warning = load_image("rune/rune_warning.png", cv2.IMREAD_GRAYSCALE)
@@ -121,11 +132,11 @@ class MapleStoryBot:
                 load_image("rune/arrow_down_3.png"),],
         }
 
-        # Load monsters images from monster/
+        # Load monsters images from monster/{monster_name}
         self.monsters = {}
         for monster_name in args.monsters.split(","):
             imgs = []
-            for file in glob.glob(f"monster/{monster_name}*.png"):
+            for file in glob.glob(f"monster/{monster_name}/{monster_name}*.png"):
                 # Add original image
                 img = load_image(file)
                 imgs.append((img, get_mask(img, (0, 255, 0))))
@@ -135,8 +146,8 @@ class MapleStoryBot:
             if imgs:
                 self.monsters[monster_name] = imgs
             else:
-                logger.error(f"No images found in monster/{monster_name}*")
-                raise RuntimeError(f"No images found in monster/{monster_name}*")
+                logger.error(f"No images found in monster/{monster_name}/{monster_name}*")
+                raise RuntimeError(f"No images found in monster/{monster_name}/{monster_name}*")
         logger.info(f"Loaded monsters: {list(self.monsters.keys())}")
 
         # Start keyboard controller thread
@@ -162,7 +173,7 @@ class MapleStoryBot:
         - Using template matching to locate the nametag, split into left and right halves
         to improve robustness against partial occlusion.
         - Selecting the best match (left or right) based on score and cache status.
-        - Computing the player’s center position by applying a fixed offset to the nametag.
+        - Computing the player's center position by applying a fixed offset to the nametag.
 
         Returns:
             loc_player (tuple): The (x, y) coordinates of the player's estimated location.
@@ -213,7 +224,7 @@ class MapleStoryBot:
                 data["img_pattern"],
                 last_result=data["last_result"],
                 mask=data["mask"],
-                global_threshold=0.3
+                global_threshold=self.cfg.nametag_global_thres
             )
             w_match = data["img_pattern"].shape[1]
             h_match = data["img_pattern"].shape[0]
@@ -1006,6 +1017,7 @@ class MapleStoryBot:
         text_list = [
             f"FPS: {self.fps}",
             f"Status: {self.status}",
+            f"Resolution: {self.frame.shape[0]}x{self.frame.shape[1]}",
             f"Press 'F1' to {'pause' if self.kb.is_enable else 'start'} Bot",
             f"Press 'F2' to save screenshot{' : Saved' if dt_screenshot < 0.7 else ''}"]
         for idx, text in enumerate(text_list):
@@ -1061,20 +1073,38 @@ class MapleStoryBot:
         '''
         update_img_frame_debug
         '''
-        cv2.imshow("Game Window Debug",
-                   self.img_frame_debug[self.cfg.camera_ceiling:self.cfg.camera_floor, :])
+        cv2.imshow("Game Window Debug", self.img_frame_debug)
         # Update FPS timer
         self.t_last_frame = time.time()
 
     def run_once(self):
         '''
-        Process with one game window frame
+        Process one game window frame
         '''
-        # Get lastest game screen frame buffer
+        # Get window game raw frame
         self.frame = self.capture.get_frame()
+        if self.frame is None:
+            logger.warning("Failed to capture game frame.")
+            return
 
-        # Resize game screen to 1296x759
-        self.img_frame = cv2.resize(self.frame, (1296, 759), interpolation=cv2.INTER_NEAREST)
+        # Make sure resolution is as expected
+        if self.cfg.window_size != self.frame.shape[:2]:
+            text = f"Unexpeted window size: {self.frame.shape[:2]} (expect {self.cfg.window_size})"
+            logger.error(text)
+            return
+
+        # Resize raw frame to (1296, 759)
+        self.img_frame = cv2.resize(self.frame, (1296, 759),
+                                    interpolation=cv2.INTER_NEAREST)
+
+        # Get minimap coordinate and size on game window
+        minimap_result = get_minimap_loc_size(self.img_frame)
+        if minimap_result is None:
+            logger.warning("Failed to get minimap location and size.")
+            return
+        x, y, w, h = minimap_result
+        self.loc_minimap = (x, y)
+        self.img_minimap = self.img_frame[y:y+h, x:x+w]
 
         # Grayscale game window
         self.img_frame_gray = cv2.cvtColor(self.img_frame, cv2.COLOR_BGR2GRAY)
@@ -1086,16 +1116,6 @@ class MapleStoryBot:
         if not self.args.patrol:
             self.img_route = self.img_routes[self.idx_routes]
             self.img_route_debug = cv2.cvtColor(self.img_route, cv2.COLOR_RGB2BGR)
-
-        # Get minimap from game window
-        if self.is_first_frame:
-            x, y, w, h = get_minimap_loc_size(self.img_frame)
-            self.loc_minimap = (x, y)
-            self.img_minimap = self.img_frame[y:y+h, x:x+w]
-        else:
-            x, y = self.loc_minimap
-            h, w = self.img_minimap.shape[:2]
-            self.img_minimap = self.img_frame[y:y+h, x:x+w]
 
         # Detect HP/MP/EXP bar on game window
         self.hp_ratio, self.mp_ratio, self.exp_ratio = self.get_hp_mp_exp()
@@ -1112,7 +1132,9 @@ class MapleStoryBot:
         self.loc_player = self.get_player_location_by_nametag()
 
         # Get player location on minimap
-        loc_player_minimap = get_player_location_on_minimap(self.img_minimap)
+        loc_player_minimap = get_player_location_on_minimap(
+                                self.img_minimap,
+                                minimap_player_color=self.cfg.minimap_player_color)
         if loc_player_minimap:
             self.loc_player_minimap = loc_player_minimap
 
@@ -1401,7 +1423,7 @@ class MapleStoryBot:
 
         # Check if need to save screenshot
         if self.kb.is_need_screen_shot:
-            screenshot(mapleStoryBot.img_frame)
+            screenshot(self.img_frame)
             self.kb.is_need_screen_shot = False
 
         # Resize img_route_debug for better visualization
@@ -1475,6 +1497,13 @@ if __name__ == '__main__':
         type=str,
         default='magic_claw',
         help='Choose attack method, "magic_claw", "aoe_skill"'
+    )
+
+    parser.add_argument(
+        '--nametag',
+        type=str,
+        default='example',
+        help='Choose nametag png file in nametag/'
     )
 
     try:

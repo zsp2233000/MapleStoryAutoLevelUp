@@ -6,12 +6,21 @@ Utility functions
 import cv2
 import datetime
 import os
+import platform
 
 #
 import numpy as np
 
 # Local import
 from logger import logger
+
+OS_NAME = platform.system()
+
+def is_mac():
+    return OS_NAME == 'Darwin'
+
+def is_windows():
+    return OS_NAME == 'Windows'
 
 def load_image(path, mode=cv2.IMREAD_COLOR):
     '''
@@ -21,6 +30,7 @@ def load_image(path, mode=cv2.IMREAD_COLOR):
         logger.error(f"Image not found: {path}")
         raise FileNotFoundError(f"Image not found: {path}")
 
+    # Load image
     img = cv2.imread(path, mode)
     if img is None:
         logger.error(f"Failed to load image file: {path}")
@@ -131,6 +141,29 @@ def draw_rectangle(img, top_left, size, color, text,
     cv2.putText(img, text, (top_left[0], top_left[1] - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, text_height, color, thickness)
 
+def pad_to_size(img, size, pad_value=0):
+    '''
+    pad_to_size
+    '''
+    h_img, w_img = img.shape[:2]
+    h_target, w_target = size
+
+    pad_h = max(0, h_target - h_img)
+    pad_w = max(0, w_target - w_img)
+
+    if pad_h > 0 or pad_w > 0:
+        img = cv2.copyMakeBorder(
+            img,
+            top   = pad_h // 2,
+            bottom= pad_h - pad_h // 2,
+            left  = pad_w // 2,
+            right = pad_w - pad_w // 2,
+            borderType=cv2.BORDER_CONSTANT,
+            value=pad_value
+        )
+
+    return img
+
 def find_pattern_sqdiff(
         img, img_pattern,
         last_result=None,
@@ -154,9 +187,12 @@ def find_pattern_sqdiff(
     - min_val: The matching score (lower = better for SQDIFF_NORMED).
     - bool: local search success or not
     '''
+    # Padding if img is smaller than pattern
+    img = pad_to_size(img, img_pattern.shape[:2])
+
     # search last result location first to speedup
     h, w = img_pattern.shape[:2]
-    if last_result is not None:
+    if last_result is not None and global_threshold > 0.0:
         lx, ly = last_result
         x0 = max(0, lx - local_search_radius)
         y0 = max(0, ly - local_search_radius)
@@ -182,6 +218,10 @@ def find_pattern_sqdiff(
             cv2.TM_SQDIFF_NORMED,
             mask=mask
     )
+
+    # Replace -inf/+inf/nan to 1.0 to avoid numerical error
+    res = np.nan_to_num(res, nan=1.0, posinf=1.0, neginf=1.0)
+
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
     return min_loc, min_val, False
@@ -275,6 +315,7 @@ def get_minimap_loc_size(img_frame):
 
         return x_minimap, y_minimap, w_minimap, h_minimap
 
+    logger.warning("Minimap not found in the game frame.")
     return None  # minimap not found
 
 def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 255)):
@@ -292,7 +333,6 @@ def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 
         (x, y): The player's location in minimap coordinates as a tuple.
                 Returns None if not enough matching pixels are found.
     """
-    # Find pixels matching the player color
     mask = cv2.inRange(img_minimap,
                         minimap_player_color,
                         minimap_player_color)

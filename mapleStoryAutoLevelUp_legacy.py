@@ -14,11 +14,11 @@ import numpy as np
 import cv2
 
 # local import
-from config.config_legacy import Config
+from config.legacy.config_legacy import Config
 from logger import logger
 from util import find_pattern_sqdiff, draw_rectangle, screenshot, nms, load_image, get_mask
 from KeyBoardController import KeyBoardController
-from GameWindowCapturor import GameWindowCapturor
+from GameWindowCapturorSelector import GameWindowCapturor
 
 class MapleStoryBot:
     '''
@@ -136,11 +136,11 @@ class MapleStoryBot:
                 load_image("rune/arrow_down_3.png"),],
         }
 
-        # Load monsters images
+        # Load monsters images from monster/{monster_name}
         self.monsters = {}
         for monster_name in args.monsters.split(","):
             imgs = []
-            for file in glob.glob(f"monster/{monster_name}*.png"):
+            for file in glob.glob(f"monster/{monster_name}/{monster_name}*.png"):
                 # Add original image
                 img = load_image(file)
                 imgs.append((img, get_mask(img, (0, 255, 0))))
@@ -150,8 +150,8 @@ class MapleStoryBot:
             if imgs:
                 self.monsters[monster_name] = imgs
             else:
-                logger.error(f"No images found in monster/{monster_name}*")
-                raise RuntimeError(f"No images found in monster/{monster_name}*")
+                logger.error(f"No images found in monster/{monster_name}/{monster_name}*")
+                raise RuntimeError(f"No images found in monster/{monster_name}/{monster_name}*")
         logger.info(f"Loaded monsters: {list(self.monsters.keys())}")
 
         # Start keyboard controller thread
@@ -1319,10 +1319,10 @@ class MapleStoryBot:
                 command = self.get_random_action()
             elif command in ["up", "down"]:
                 pass # Don't attack or heal while character is on rope
-            elif self.hp_ratio <= self.cfg.heal_ratio:
-                command = "heal"
-            elif self.mp_ratio <= self.cfg.add_mp_ratio:
-                command = "add mp"
+            # elif self.hp_ratio <= self.cfg.heal_ratio:
+            #     command = "heal"
+            # elif self.mp_ratio <= self.cfg.add_mp_ratio:
+            #     command = "add mp"
             elif attack_direction == "I don't care":
                 command = "attack"
             elif attack_direction == "left":
