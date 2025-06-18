@@ -38,7 +38,7 @@ class Config:
     # FPS(Frame per Second) limit for main thread
     fps_limit = 15
     # offset from the nametag's top-left corner to the player's center
-    nametag_offset = (-35, 35) # pixel
+    nametag_offset = (-37, 35) # pixel
     nametag_diff_thres = 0.4
 
     # ────────────────
@@ -53,7 +53,56 @@ class Config:
     # attack cooldown time in seconds
     attack_cooldown = 0.05  # seconds between attacks
     # character turn delay before attack
-    character_turn_delay = 0.02  # seconds to wait for character to turn before attacking
+    character_turn_delay = 0.1  # seconds to wait for character to turn before attacking
+
+    # ###########################################################################
+    # killua
+    # ###########################################################################
+    # # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
+    # aoe_skill_key = "r"
+
+    # # Key to trigger the basic attack skill, like Mage's Magic Claw.
+    # magic_claw_key = "r"
+
+    # # Key to trigger Mage's teleport skill
+    # teleport_key = "" # set to "", if need to disable teleport skill
+
+    # # Key for jumping.
+    # jump_key = "space"
+
+    # # Key to use a health potion.
+    # heal_key = "1"
+
+    # # Key to use a mana potion.
+    # add_mp_key = "2"
+
+    # # Buff skill keys, e.g., magical sheild, angel blessing
+    # buff_skill_keys     = ["0", "0", "0"]
+    # buff_skill_cooldown = [300, 140, 75] # Second
+    # buff_skill_active_duration = 1 # second
+
+    # # ────────────────
+    # # NameTag Recongnition
+    # # ────────────────
+    # # FPS(Frame per Second) limit for main thread
+    # fps_limit = 15
+    # # offset from the nametag's top-left corner to the player's center
+    # nametag_offset = (-38, 35) # pixel
+    # nametag_diff_thres = 0.4
+
+    # # ────────────────
+    # # Attack Settings
+    # # ────────────────
+    # # aoe skill attack range relative to player position
+    # aoe_skill_range_x = 240 # pixels (horizontal range)
+    # aoe_skill_range_y = 70  # pixels (vertical range)
+    # # magic claw skill attack range relative to player position
+    # magic_claw_range_x = 240 # pixels (horizontal range)
+    # magic_claw_range_y = 70  # pixels (vertical range)
+    # # attack cooldown time in seconds
+    # attack_cooldown = 0.05  # seconds between attacks
+    # # character turn delay before attack
+    # character_turn_delay = 0.1  # seconds to wait for character to turn before attacking
 
     # ────────────────
     # Edge Teleport
@@ -115,8 +164,8 @@ class Config:
     # ────────────────
     # Movement Behavior
     # ────────────────
-    up_drag_duration = 1.0 # hold duration for 'up' key to prevent rope-sticking (in seconds)
-    down_drag_duration = 1.0 # seconds
+    up_drag_duration = 3.0 # hold duration for 'up' key to prevent rope-sticking (in seconds)
+    down_drag_duration = 2.0 # seconds
     watch_dog_timeout = 3 # seconds, if player doesn't move for 3 second, random perform an action
     watch_dog_range = 10 # pixel, if player location is smaller than watch_dog_range, consider it doesn't move
 
@@ -125,7 +174,7 @@ class Config:
     # ────────────────
     rune_warning_top_left     = (513, 196)
     rune_warning_bottom_right = (768, 236)
-    rune_warning_diff_thres = 0.2
+    rune_warning_diff_thres = 0.3
 
     # ────────────────
     # Rune Detection
