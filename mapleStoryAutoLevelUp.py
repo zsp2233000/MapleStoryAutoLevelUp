@@ -1290,7 +1290,7 @@ class MapleStoryBot:
         # Special logic for each status, overwrite color code action
         if self.status == "hunting":
             # Check MP ratio and switch to resting if too low
-            if self.mp_ratio < 0.1:
+            if self.health_monitor.mp_ratio < 0.1:
                 self.switch_status("resting")
             # Perform a random action when player stuck (but not if recently saw monsters)
             elif not self.args.patrol and self.is_player_stuck():
