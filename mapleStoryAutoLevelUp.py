@@ -1019,6 +1019,7 @@ class MapleStoryBot:
         '''
         Process one game window frame
         '''
+        command = ""
         # Get window game raw frame
         self.frame = self.capture.get_frame()
         if self.frame is None:
@@ -1237,7 +1238,6 @@ class MapleStoryBot:
                 cv2.putText(self.img_frame_debug, debug_text,
                            (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
-        command = ""
         if self.args.patrol:
             x, y = self.loc_player
             h, w = self.img_frame.shape[:2]
