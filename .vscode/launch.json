@@ -42,8 +42,6 @@
                 "lost_time_1",
                 "--monster",
                 "evolved_ghost",
-                "--attack",
-                "aoe_skill",
                 "--nametag",
                 "killua"
             ]
