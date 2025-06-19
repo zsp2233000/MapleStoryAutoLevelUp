@@ -1340,7 +1340,7 @@ class MapleStoryBot:
             if self.mp_ratio < 0.1:
                 self.switch_status("resting")
             # Perform a random action when player stuck (but not if recently saw monsters)
-            elif not self.args.patrol and self.is_player_stuck() and not should_stay_for_combat:
+            elif not self.args.patrol and self.is_player_stuck():
                 command = self.get_random_action()
             elif command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack or heal while character is on rope or jumping
@@ -1358,9 +1358,11 @@ class MapleStoryBot:
                 command = "attack right"
                 self.t_last_attack = time.time()
 
+        # 在attacking狀態下，只進行攻擊，不進行移動
         elif self.status == "attacking":
-            # 在attacking狀態下，只進行攻擊，不進行移動
-            if attack_direction == "I don't care" and nearest_monster is not None and \
+            if not self.args.patrol and self.is_player_stuck():
+                command = self.get_random_action()           
+            elif attack_direction == "I don't care" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg.attack_cooldown:
                 command = "attack"
                 self.t_last_attack = time.time()
