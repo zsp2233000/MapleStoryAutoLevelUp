@@ -1145,7 +1145,7 @@ class MapleStoryBot:
         has_monsters = self.has_monsters_in_attack_range()
         
         # 狀態切換邏輯
-        if has_monsters and self.status == "hunting":
+        if has_monsters and self.status == "hunting" and command not in ["up", "down"]:
             self.switch_status("attacking")
         elif not has_monsters and self.status == "attacking":
             self.switch_status("hunting")
