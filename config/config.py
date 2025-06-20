@@ -9,65 +9,16 @@ class Config:
     # ────────────────
     # Adjust the following key to match the in-game keybinding for your character.
     # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
-    # aoe_skill_key = "r"
-
-    # # Key to trigger the basic attack skill, like Mage's Magic Claw.
-    # magic_claw_key = "r"
-
-    # # Key to trigger Mage's teleport skill
-    # teleport_key = "" # set to "", if need to disable teleport skill
-
-    # # Key for jumping.
-    # jump_key = "space"
-
-    # # Key to use a health potion.
-    # heal_key = "1"
-
-    # # Key to use a mana potion.
-    # add_mp_key = "2"
-
-    # # Buff skill keys, e.g., magical sheild, angel blessing
-    # buff_skill_keys     = ["0", "0", "0"]
-    # buff_skill_cooldown = [300, 140, 75] # Second
-    # buff_skill_active_duration = 1 # second
-
-    # # ────────────────
-    # # NameTag Recongnition
-    # # ────────────────
-    # # FPS(Frame per Second) limit for main thread
-    # fps_limit = 15
-    # # offset from the nametag's top-left corner to the player's center
-    # nametag_offset = (-37, 35) # pixel
-    # nametag_diff_thres = 0.4
-
-    # # ────────────────
-    # # Attack Settings
-    # # ────────────────
-    # # aoe skill attack range relative to player position
-    # aoe_skill_range_x = 240 # pixels (horizontal range)
-    # aoe_skill_range_y = 70  # pixels (vertical range)
-    # # magic claw skill attack range relative to player position
-    # magic_claw_range_x = 240 # pixels (horizontal range)
-    # magic_claw_range_y = 70  # pixels (vertical range)
-    # # attack cooldown time in seconds
-    # attack_cooldown = 0.05  # seconds between attacks
-    # # character turn delay before attack
-    # character_turn_delay = 0.1  # seconds to wait for character to turn before attacking
-
-    # ###########################################################################
-    # killua
-    # ###########################################################################
-    # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
     aoe_skill_key = "r"
 
     # Key to trigger the basic attack skill, like Mage's Magic Claw.
-    magic_claw_key = "s"
+    magic_claw_key = "r"
 
     # Key to trigger Mage's teleport skill
     teleport_key = "" # set to "", if need to disable teleport skill
 
     # Key for jumping.
-    jump_key = "v"
+    jump_key = "space"
 
     # Key to use a health potion.
     heal_key = "1"
@@ -75,17 +26,19 @@ class Config:
     # Key to use a mana potion.
     add_mp_key = "2"
 
-    # ────────────────
-    # Buff skill
-    # ────────────────
     # Buff skill keys, e.g., magical sheild, angel blessing
-    buff_skill_keys     = ["3", "0", "0"]
+    buff_skill_keys     = ["0", "0", "0"]
     buff_skill_cooldown = [300, 140, 75] # Second
     buff_skill_active_duration = 1 # second
     buff_skill_action_cooldown = 1 # second, avoid cast buff skill after attack
 
+    # ────────────────
+    # NameTag Recongnition
+    # ────────────────
+    # FPS(Frame per Second) limit for main thread
+    fps_limit = 15
     # offset from the nametag's top-left corner to the player's center
-    nametag_offset = (-38, 35) # pixel
+    nametag_offset = (-37, 35) # pixel
     nametag_diff_thres = 0.4
 
     # ────────────────
@@ -95,12 +48,60 @@ class Config:
     aoe_skill_range_x = 240 # pixels (horizontal range)
     aoe_skill_range_y = 70  # pixels (vertical range)
     # magic claw skill attack range relative to player position
-    magic_claw_range_x = 180 # pixels (horizontal range)
+    magic_claw_range_x = 240 # pixels (horizontal range)
     magic_claw_range_y = 70  # pixels (vertical range)
     # attack cooldown time in seconds
     attack_cooldown = 0.05  # seconds between attacks
     # character turn delay before attack
     character_turn_delay = 0.1  # seconds to wait for character to turn before attacking
+
+    # ###########################################################################
+    # killua
+    # ###########################################################################
+    # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
+    # aoe_skill_key = "r"
+
+    # # Key to trigger the basic attack skill, like Mage's Magic Claw.
+    # magic_claw_key = "s"
+
+    # # Key to trigger Mage's teleport skill
+    # teleport_key = "" # set to "", if need to disable teleport skill
+
+    # # Key for jumping.
+    # jump_key = "v"
+
+    # # Key to use a health potion.
+    # heal_key = "1"
+
+    # # Key to use a mana potion.
+    # add_mp_key = "2"
+
+    # # ────────────────
+    # # Buff skill
+    # # ────────────────
+    # # Buff skill keys, e.g., magical sheild, angel blessing
+    # buff_skill_keys     = ["3", "0", "0"]
+    # buff_skill_cooldown = [300, 140, 75] # Second
+    # buff_skill_active_duration = 1 # second
+    # buff_skill_action_cooldown = 1 # second, avoid cast buff skill after attack
+
+    # # offset from the nametag's top-left corner to the player's center
+    # nametag_offset = (-38, 35) # pixel
+    # nametag_diff_thres = 0.4
+
+    # # ────────────────
+    # # Attack Settings
+    # # ────────────────
+    # # aoe skill attack range relative to player position
+    # aoe_skill_range_x = 240 # pixels (horizontal range)
+    # aoe_skill_range_y = 70  # pixels (vertical range)
+    # # magic claw skill attack range relative to player position
+    # magic_claw_range_x = 180 # pixels (horizontal range)
+    # magic_claw_range_y = 70  # pixels (vertical range)
+    # # attack cooldown time in seconds
+    # attack_cooldown = 0.05  # seconds between attacks
+    # # character turn delay before attack
+    # character_turn_delay = 0.1  # seconds to wait for character to turn before attacking
     
     # #############################################################################
 
@@ -162,7 +163,7 @@ class Config:
     # ────────────────
     # Route Detection (color code)
     # ────────────────
-    color_code_search_range = 10 # radius to find nearest color route from player center
+    color_code_search_range = 5 # radius to find nearest color route from player center
 
     # ────────────────
     # Movement Behavior

@@ -25,7 +25,7 @@
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
             "args": [
                 "--map",
-                "Black Mountain",
+                "black_mountain",
                 "--monster",
                 "black_axe_stump,moon_bunny,hodori",
                 "--nametag",
