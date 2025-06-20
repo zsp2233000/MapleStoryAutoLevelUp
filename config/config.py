@@ -8,8 +8,7 @@ class Config:
     # Keyboard Mapping
     # ────────────────
     # Adjust the following key to match the in-game keybinding for your character.
-
-    # # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
+    # Key to trigger AoE skill (e.g., Monk's AoE heal or Mage's AoE attack).
     # aoe_skill_key = "r"
 
     # # Key to trigger the basic attack skill, like Mage's Magic Claw.
@@ -130,7 +129,7 @@ class Config:
     # System
     # ────────────────
     # FPS(Frame per Second) limit for main thread
-    fps_limit = 10
+    fps_limit = 15
 
     # ────────────────
     # Mage Teleport
@@ -161,7 +160,7 @@ class Config:
     # ────────────────
     # Movement Behavior
     # ────────────────
-    up_drag_duration = 3.0 # hold duration for 'up' key to prevent rope-sticking (in seconds)
+    up_drag_duration = 2.0 # hold duration for 'up' key to prevent rope-sticking (in seconds)
     down_drag_duration = 2.0 # seconds
     watch_dog_timeout = 3 # seconds, if player doesn't move for 3 second, random perform an action
     watch_dog_range = 10 # pixel, if player location is smaller than watch_dog_range, consider it doesn't move
