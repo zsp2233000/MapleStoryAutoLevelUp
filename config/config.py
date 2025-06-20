@@ -75,10 +75,14 @@ class Config:
     # Key to use a mana potion.
     add_mp_key = "2"
 
+    # ────────────────
+    # Buff skill
+    # ────────────────
     # Buff skill keys, e.g., magical sheild, angel blessing
     buff_skill_keys     = ["3", "0", "0"]
     buff_skill_cooldown = [300, 140, 75] # Second
     buff_skill_active_duration = 1 # second
+    buff_skill_action_cooldown = 1 # second, avoid cast buff skill after attack
 
     # offset from the nametag's top-left corner to the player's center
     nametag_offset = (-38, 35) # pixel
@@ -117,6 +121,8 @@ class Config:
     # If you find the nametag is cached, but the location is incorrect.
     # Disable this feature by setting nametag_global_thres = 0.0
     nametag_global_thres = 0.2
+    nametag_split_width = 30 # pixel, vertically split nametag
+    nametag_detection_mode = "grayscale" # "grayscale", "white_mask"
 
     # ────────────────
     # Camera
@@ -130,6 +136,7 @@ class Config:
     # ────────────────
     # FPS(Frame per Second) limit for main thread
     fps_limit = 15
+    show_debug_window = True # False, disable debug window to save system resource
 
     # ────────────────
     # Mage Teleport
