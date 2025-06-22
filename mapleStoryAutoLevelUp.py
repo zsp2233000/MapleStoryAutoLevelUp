@@ -1427,6 +1427,10 @@ class MapleStoryBot:
         elif self.status == "resting":
             self.img_routes = [self.img_route_rest] # Set up resting route
             self.idx_routes = 0
+            if command == "stop":
+                logger.info("玩家休息中，結束程式...")
+                cv2.destroyAllWindows()
+                sys.exit(0)
 
         else:
             logger.error(f"Unknown status: {self.status}")
