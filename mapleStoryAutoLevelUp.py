@@ -1656,7 +1656,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--cfg',
         type=str,
-        default='edit_me',
+        default='no',
         help='Choose customized config yaml file in config/'
     )
 
