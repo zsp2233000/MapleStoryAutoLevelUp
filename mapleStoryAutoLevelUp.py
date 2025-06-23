@@ -9,16 +9,17 @@ import argparse
 import glob
 import sys
 
-# CV import
+
+# Library import
 import numpy as np
 import cv2
 
-# local import
-from config.config import Config
+# Local import
 from logger import logger
 from util import find_pattern_sqdiff, draw_rectangle, screenshot, nms, \
                 load_image, get_mask, get_minimap_loc_size, get_player_location_on_minimap, \
-                is_mac, nms_matches
+                is_mac, nms_matches, override_cfg, load_yaml, get_all_other_player_locations_on_minimap, \
+                click_in_game_window
 from KeyBoardController import KeyBoardController
 if is_mac():
     from GameWindowCapturorForMac import GameWindowCapturor
@@ -34,14 +35,14 @@ class MapleStoryBot:
         '''
         Init MapleStoryBot
         '''
-        self.cfg = Config # Configuration
+        # self.cfg = Config # Configuration
         self.args = args # User arguments
         self.status = "hunting" # 'resting', 'finding_rune', 'near_rune', 'attacking'
         self.idx_routes = 0 # Index of route map
         self.monster_info = [] # monster information
         self.fps = 0 # Frame per second
         self.is_first_frame = True # first frame flag
-        self.rune_detect_level = 0 # higher the level, lower the rune detect threshold
+        self.red_dot_center_prev = None # previous other player location in minimap
         # Coordinate (top-left coordinate)
         self.loc_nametag = (0, 0) # nametag location on game screen
         self.loc_minimap = (0, 0) # minimap location on game screen
@@ -50,6 +51,7 @@ class MapleStoryBot:
         self.loc_minimap_global = (0, 0) # minimap location on global map
         self.loc_player_global = (0, 0) # player location on global map
         self.loc_watch_dog = (0, 0) # watch dog location on global map
+        self.loc_rune = (0, 0) # rune location on game screen
         # Images
         self.frame = None # raw image
         self.img_frame = None # game window frame
@@ -57,7 +59,7 @@ class MapleStoryBot:
         self.img_frame_debug = None # game window frame for visualization
         self.img_route = None # route map
         self.img_route_debug = None # route map for visualization
-        self.img_minimap = None # minimap on game screen
+        self.img_minimap = np.zeros((10, 10, 3), dtype=np.uint8) # minimap on game screen
         # Timers
         self.t_last_frame = time.time() # Last frame timer, for fps calculation
         self.t_last_switch_status = time.time() # Last status switches timer
@@ -65,6 +67,7 @@ class MapleStoryBot:
         self.t_last_teleport = time.time() # Last teleport timer
         self.t_patrol_last_attack = time.time() # Last patrol attack timer
         self.t_last_attack = time.time() # Last attack timer for cooldown
+        self.t_last_rune_trigger = time.time() # Last time trigger rune
         # Patrol mode
         self.is_patrol_to_left = True # Patrol direction flag
         self.patrol_turn_point_cnt = 0 # Patrol tuning back counter
@@ -73,17 +76,23 @@ class MapleStoryBot:
         self.t_last_monster_seen = 0  # Last time we saw any monster
         self.combat_delay = 1.0  # Seconds to wait after last monster before moving
 
+        # Load defautl yaml config
+        cfg = load_yaml("config/config_default.yaml")
+        # Override with platform config
+        if is_mac():
+            cfg = override_cfg(cfg, load_yaml("config/config_macOS.yaml"))
+        # Override with user customized config
+        self.cfg = override_cfg(cfg, load_yaml(f"config/config_{args.cfg}.yaml"))
+
+        # Parse color code
+        self.color_code = {
+            tuple(map(int, k.split(','))): v
+            for k, v in cfg["route"]["color_code"].items()
+        }
+
         # Set status to hunting for startup
         self.switch_status("hunting")
 
-        # Overwrite config.py for macOS
-        # TODO: move custimized config to config_mac.py
-        if is_mac():
-            self.cfg.minimap_upscale_factor = 2 # Mac laptop typically has a smaller screen
-            self.cfg.game_window_title = 'MapleStory Worlds'
-            self.cfg.window_size = (776, 1280) # Set resolution to (1280x720) in game setting
-            self.cfg.monster_health_bar_color = (90, 201, 108) # (B,G,R)
-            self.cfg.minimap_player_color = (84, 255, 255) # BGR
         if args.patrol:
             # Patrol mode doesn't need map or route
             self.img_map = None
@@ -108,10 +117,20 @@ class MapleStoryBot:
         self.img_nametag_gray = load_image(f"nametag/{args.nametag}.png", cv2.IMREAD_GRAYSCALE)
 
         # Load rune images from rune/
-        self.img_rune_warning = load_image("rune/rune_warning.png", cv2.IMREAD_GRAYSCALE)
+        rune_ver = self.cfg["rune_warning"]["language"]
+        if rune_ver == "chinese":
+            self.img_rune_warning = load_image("rune/rune_warning.png", cv2.IMREAD_GRAYSCALE)
+        elif rune_ver == "english":
+            self.img_rune_warning = load_image("rune/rune_warning_eng.png", cv2.IMREAD_GRAYSCALE)
+        else:
+            logger.error(f"Unsupported rune warning version: {rune_ver}")
+
         self.img_runes = [load_image("rune/rune_1.png"),
                           load_image("rune/rune_2.png"),
                           load_image("rune/rune_3.png"),]
+        if rune_ver == "english":
+            self.img_runes[1] = load_image("rune/rune_2_eng.png")
+
         self.img_arrows = {
             "left":
                 [load_image("rune/arrow_left_1.png"),
@@ -160,7 +179,8 @@ class MapleStoryBot:
 
         # Start health monitoring thread
         self.health_monitor = HealthMonitor(self.cfg, args, self.kb)
-        self.health_monitor.start()
+        if self.cfg["health_monitor"]["enable"]:
+            self.health_monitor.start()
 
     def get_player_location_by_nametag(self):
         '''
@@ -178,21 +198,22 @@ class MapleStoryBot:
             loc_player (tuple): The (x, y) coordinates of the player's estimated location.
         '''
         # Get camera region in the game window
-        img_camera = self.img_frame_gray[self.cfg.camera_ceiling:self.cfg.camera_floor, :]
+        img_camera = self.img_frame_gray[
+            self.cfg["camera"]["y_start"]:self.cfg["camera"]["y_end"], :]
 
         # Get nametag image and search image
-        if self.cfg.nametag_detection_mode == "white_mask":
+        if self.cfg["nametag"]["mode"] == "white_mask":
             # Apply Gaussian blur for smoother white detection
             img_camera = cv2.GaussianBlur(img_camera, (3, 3), 0)
             img_nametag = cv2.GaussianBlur(self.img_nametag_gray, (3, 3), 0)
             lower_white, upper_white = (150, 255)
             img_roi = cv2.inRange(img_camera, lower_white, upper_white)
             img_nametag  = cv2.inRange(img_nametag, lower_white, upper_white)
-        elif self.cfg.nametag_detection_mode == "grayscale":
+        elif self.cfg["nametag"]["mode"] == "grayscale":
             img_roi = img_camera
             img_nametag = self.img_nametag_gray
         else:
-            logger.error(f"Unsupported nametag detection mode: {self.cfg.nametag_detection_mode}")
+            logger.error(f"Unsupported nametag detection mode: {self.cfg['nametag']['mode']}")
             return
         # cv2.imshow("img_roi", img_roi)
         # cv2.imshow("img_nametag", img_nametag)
@@ -211,12 +232,12 @@ class MapleStoryBot:
         else:
             last_result = (
                 self.loc_nametag[0] + pad_x,
-                self.loc_nametag[1] - self.cfg.camera_ceiling + pad_y
+                self.loc_nametag[1] + pad_y - self.cfg["camera"]["y_start"]
             )
 
         # Get number of splits
         h, w = img_nametag.shape
-        num_splits = max(1, w // self.cfg.nametag_split_width)
+        num_splits = max(1, w // self.cfg["nametag"]["split_width"])
         w_split = w // num_splits
 
         # Get nametag's background mask
@@ -245,7 +266,7 @@ class MapleStoryBot:
                 split["img"],
                 last_result=split["last_result"],
                 mask=split["mask"],
-                global_threshold=self.cfg.nametag_global_thres
+                global_threshold=self.cfg["nametag"]["global_diff_thres"]
             )
             w_match = split["img"].shape[1]
             h_match = split["img"].shape[0]
@@ -260,16 +281,16 @@ class MapleStoryBot:
         loc_nametag = (loc_nametag[0] - offset_x, loc_nametag[1])
         loc_nametag = (
             loc_nametag[0] - pad_x,
-            loc_nametag[1] - pad_y + self.cfg.camera_ceiling
+            loc_nametag[1] - pad_y + self.cfg["camera"]["y_start"]
         )
 
         # Only update nametag location when score is good enough
-        if score < self.cfg.nametag_diff_thres:
+        if score < self.cfg["nametag"]["diff_thres"]:
             self.loc_nametag = loc_nametag
 
         loc_player = (
-            self.loc_nametag[0] - self.cfg.nametag_offset[0],
-            self.loc_nametag[1] - self.cfg.nametag_offset[1]
+            self.loc_nametag[0] + w // 2,
+            self.loc_nametag[1] - self.cfg["nametag"]["offset"][1]
         )
 
         # Draw name tag detection box for debugging
@@ -361,24 +382,24 @@ class MapleStoryBot:
         '''
         x0, y0 = self.loc_player_global
         h, w = self.img_route.shape[:2]
-        x_min = max(0, x0 - self.cfg.color_code_search_range)
-        x_max = min(w, x0 + self.cfg.color_code_search_range)
-        y_min = max(0, y0 - self.cfg.color_code_search_range)
-        y_max = min(h, y0 + self.cfg.color_code_search_range)
+        x_min = max(0, x0 - self.cfg["route"]["search_range"])
+        x_max = min(w, x0 + self.cfg["route"]["search_range"])
+        y_min = max(0, y0 - self.cfg["route"]["search_range"])
+        y_max = min(h, y0 + self.cfg["route"]["search_range"])
 
         nearest = None
         min_dist = float('inf')
         for y in range(y_min, y_max):
             for x in range(x_min, x_max):
                 pixel = tuple(self.img_route[y, x])  # (R, G, B)
-                if pixel in self.cfg.color_code:
+                if pixel in self.color_code:
                     dist = abs(x - x0) + abs(y - y0)
                     if dist < min_dist:
                         min_dist = dist
                         nearest = {
                             "pixel": (x, y),
                             "color": pixel,
-                            "action": self.cfg.color_code[pixel],
+                            "action": self.color_code[pixel],
                             "distance": dist
                         }
 
@@ -386,8 +407,8 @@ class MapleStoryBot:
         draw_rectangle(
             self.img_route_debug,
             (x_min, y_min),
-            (self.cfg.color_code_search_range*2,
-             self.cfg.color_code_search_range*2),
+            (self.cfg["route"]["search_range"]*2,
+             self.cfg["route"]["search_range"]*2),
             (0, 0, 255), "", text_height=0.4, thickness=1,
         )
         # Draw a straigt line from map_loc_player to color_code["pixel"]
@@ -436,21 +457,21 @@ class MapleStoryBot:
         '''
         # Get attack box
         if self.args.attack == "aoe_skill":
-            dx = self.cfg.aoe_skill_range_x // 2
-            dy = self.cfg.aoe_skill_range_y // 2
+            dx = self.cfg["aoe_skill"]["range_x"] // 2
+            dy = self.cfg["aoe_skill"]["range_y"] // 2
             x0 = max(0, self.loc_player[0] - dx)
             x1 = min(self.img_frame.shape[1], self.loc_player[0] + dx)
             y0 = max(0, self.loc_player[1] - dy)
             y1 = min(self.img_frame.shape[0], self.loc_player[1] + dy)
-        elif self.args.attack == "magic_claw":
+        elif self.args.attack == "directional":
             if is_left:
-                x0 = self.loc_player[0] - self.cfg.magic_claw_range_x
+                x0 = self.loc_player[0] - self.cfg["directional_attack"]["range_x"]
                 x1 = self.loc_player[0]
             else:
                 x0 = self.loc_player[0]
-                x1 = x0 + self.cfg.magic_claw_range_x
-            y0 = self.loc_player[1] - self.cfg.magic_claw_range_y//2
-            y1 = y0 + self.cfg.magic_claw_range_y
+                x1 = x0 + self.cfg["directional_attack"]["range_x"]
+            y0 = self.loc_player[1] - self.cfg["directional_attack"]["range_y"] // 2
+            y1 = y0 + self.cfg["directional_attack"]["range_y"]
         else:
             logger.error(f"Unsupported attack mode: {self.args.attack}")
             return None
@@ -459,7 +480,7 @@ class MapleStoryBot:
         draw_rectangle(
             self.img_frame_debug, (x0, y0),
             (y1-y0, x1-x0),
-            (0, 0, 255), "Attack Box"
+            (0, 0, 255), "Attack Range"
         )
 
         nearest_monster = None
@@ -511,7 +532,7 @@ class MapleStoryBot:
             for img_monster, mask_monster in monster_imgs:
                 if self.args.patrol:
                     pass # Don't detect monster using template in patrol mode
-                elif self.cfg.monster_detect_mode == "template_free":
+                elif self.cfg["monster_detect"]["mode"] == "template_free":
                     # Generate mask where pixel is exactly (0,0,0)
                     black_mask = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
                     cv2.imshow("Black Pixel Mask", black_mask)
@@ -522,10 +543,10 @@ class MapleStoryBot:
                     py_in_roi = py - y0
 
                     # Define rectangle range around player (in ROI coordinate)
-                    char_x_min = max(0, px_in_roi - self.cfg.character_width // 2)
-                    char_x_max = min(img_roi.shape[1], px_in_roi + self.cfg.character_width // 2)
-                    char_y_min = max(0, py_in_roi - self.cfg.character_height // 2)
-                    char_y_max = min(img_roi.shape[0], py_in_roi + self.cfg.character_height // 2)
+                    char_x_min = max(0, px_in_roi - self.cfg["character"]["width"] // 2)
+                    char_x_max = min(img_roi.shape[1], px_in_roi + self.cfg["character"]["width"] // 2)
+                    char_y_min = max(0, py_in_roi - self.cfg["character"]["height"] // 2)
+                    char_y_max = min(img_roi.shape[0], py_in_roi + self.cfg["character"]["height"] // 2)
 
                     # Zero out mask inside this region (ignore player's own character)
                     black_mask[char_y_min:char_y_max, char_x_min:char_x_max] = 0
@@ -538,7 +559,7 @@ class MapleStoryBot:
 
                     draw_rectangle(
                         self.img_frame_debug, (char_x_min+x0, char_y_min+y0),
-                        (self.cfg.character_height, self.cfg.character_width),
+                        (self.cfg["character"]["height"], self.cfg["character"]["width"]),
                         (255, 0, 0), "Character Box"
                     )
 
@@ -555,15 +576,16 @@ class MapleStoryBot:
                                 "size": (h, w),
                                 "score": 1.0,
                             })
-                elif self.cfg.monster_detect_mode == "contour_only":
+                elif self.cfg["monster_detect"]["mode"] == "contour_only":
                     # Use only black lines contour to detect monsters
                     # Create masks (already grayscale)
                     mask_pattern = np.all(img_monster == [0, 0, 0], axis=2).astype(np.uint8) * 255
                     mask_roi = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
 
                     # Apply Gaussian blur (soften the masks)
-                    img_monster_blur = cv2.GaussianBlur(mask_pattern, (self.cfg.blur_range, self.cfg.blur_range), 0)
-                    img_roi_blur = cv2.GaussianBlur(mask_roi, (self.cfg.blur_range, self.cfg.blur_range), 0)
+                    blur = self.cfg["monster_detect"]["contour_blur"]
+                    img_monster_blur = cv2.GaussianBlur(mask_pattern, (blur, blur), 0)
+                    img_roi_blur = cv2.GaussianBlur(mask_roi, (blur, blur), 0)
 
                     # Check template vs ROI size before matching
                     h_roi, w_roi = img_roi_blur.shape[:2]
@@ -576,7 +598,7 @@ class MapleStoryBot:
                     res = cv2.matchTemplate(img_roi_blur, img_monster_blur, cv2.TM_SQDIFF_NORMED)
 
                     # Apply soft threshold
-                    match_locations = np.where(res <= self.cfg.monster_diff_thres)
+                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
 
                     h, w = img_monster.shape[:2]
                     for pt in zip(*match_locations[::-1]):
@@ -586,7 +608,7 @@ class MapleStoryBot:
                             "size": (h, w),
                             "score": res[pt[1], pt[0]],
                         })
-                elif self.cfg.monster_detect_mode == "grayscale":
+                elif self.cfg["monster_detect"]["mode"] == "grayscale":
                     img_monster_gray = cv2.cvtColor(img_monster, cv2.COLOR_BGR2GRAY)
                     img_roi_gray = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
                     res = cv2.matchTemplate(
@@ -594,7 +616,7 @@ class MapleStoryBot:
                             img_monster_gray,
                             cv2.TM_SQDIFF_NORMED,
                             mask=mask_monster)
-                    match_locations = np.where(res <= self.cfg.monster_diff_thres)
+                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
                     h, w = img_monster.shape[:2]
                     for pt in zip(*match_locations[::-1]):
                         monster_info.append({
@@ -603,13 +625,13 @@ class MapleStoryBot:
                             "size": (h, w),
                             "score": res[pt[1], pt[0]],
                     })
-                elif self.cfg.monster_detect_mode == "color":
+                elif self.cfg["monster_detect"]["mode"] == "color":
                     res = cv2.matchTemplate(
                             img_roi,
                             img_monster,
                             cv2.TM_SQDIFF_NORMED,
                             mask=mask_monster)
-                    match_locations = np.where(res <= self.cfg.monster_diff_thres)
+                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
                     h, w = img_monster.shape[:2]
                     for pt in zip(*match_locations[::-1]):
                         monster_info.append({
@@ -619,18 +641,18 @@ class MapleStoryBot:
                             "score": res[pt[1], pt[0]],
                     })
                 else:
-                    logger.error(f"Unexpected camera localization mode: {self.cfg.monster_detect_mode}")
+                    logger.error(f"Unexpected camera localization mode: {self.cfg["monster_detect"]["mode"]}")
                     return []
 
         # Apply Non-Maximum Suppression to monster detection
         monster_info = nms(monster_info, iou_threshold=0.4)
 
         # Detect monster via health bar
-        if self.cfg.monster_detect_with_health_bar:
+        if self.cfg["monster_detect"]["with_enemy_hp_bar"]:
             # Create color mask for Monsters' HP bar
             mask = cv2.inRange(img_roi,
-                               np.array(self.cfg.monster_health_bar_color),
-                               np.array(self.cfg.monster_health_bar_color))
+                               np.array(self.cfg["monster_detect"]["hp_bar_color"]),
+                               np.array(self.cfg["monster_detect"]["hp_bar_color"]))
 
             # Find connected components (each cluster of green pixels)
             num_labels, labels, stats, centroids = \
@@ -657,10 +679,10 @@ class MapleStoryBot:
 
         # Debug
         # Draw attack detection range
-        draw_rectangle(
-            self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
-            (255, 0, 0), "Monster Detection Box"
-        )
+        # draw_rectangle(
+        #     self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
+        #     (255, 0, 0), "Monster Detection Box"
+        # )
 
         # Draw monsters bounding box
         for monster in monster_info:
@@ -720,9 +742,10 @@ class MapleStoryBot:
                                             interpolation=cv2.INTER_NEAREST)
 
                 # Crop arrow detection box
-                x = self.cfg.arrow_box_start_point[0] + self.cfg.arrow_box_interval*arrow_idx
-                y = self.cfg.arrow_box_start_point[1]
-                size = self.cfg.arrow_box_size
+                x0, y0 = self.cfg["rune_solver"]["arrow_box_coord"]
+                x = x0 + self.cfg["rune_solver"]["arrow_box_interval"] * arrow_idx
+                y = y0
+                size = self.cfg["rune_solver"]["arrow_box_size"]
                 img_roi = self.img_frame[y:y+size, x:x+size]
 
                 # Loop through all possible arrows template and choose the most possible one
@@ -778,14 +801,14 @@ class MapleStoryBot:
         dy = abs(self.loc_player_global[1] - self.loc_watch_dog[1])
 
         current_time = time.time()
-        if dx + dy > self.cfg.watch_dog_range:
+        if dx + dy > self.cfg["watchdog"]["range"]:
             # Player moved, reset watchdog timer
             self.loc_watch_dog = self.loc_player_global
             self.t_watch_dog = current_time
             return False
 
         dt = current_time - self.t_watch_dog
-        if dt > self.cfg.watch_dog_timeout:
+        if dt > self.cfg["watchdog"]["timeout"]:
             # watch dog idle for too long, player stuck
             self.loc_watch_dog = self.loc_player_global
             self.t_watch_dog = current_time
@@ -805,33 +828,39 @@ class MapleStoryBot:
         Returns:
             bool: True if the rune warning is detected, False otherwise.
         '''
-        x0, y0 = self.cfg.rune_warning_top_left
-        x1, y1 = self.cfg.rune_warning_bottom_right
+        x0, y0 = self.cfg["rune_warning"]["top_left"]
+        x1, y1 = self.cfg["rune_warning"]["bottom_right"]
+
+        # Debug
+        draw_rectangle(
+            self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
+            (0, 0, 255), "")
         _, score, _ = find_pattern_sqdiff(
                         self.img_frame_gray[y0:y1, x0:x1],
                         self.img_rune_warning)
-        if self.status == "hunting" and score < self.cfg.rune_warning_diff_thres:
+        if self.status == "hunting" and score < self.cfg["rune_warning"]["diff_thres"]:
             logger.info(f"[is_rune_warning] Detect rune warning on screen with score({score})")
             return True
         else:
             return False
 
-    def is_rune_near_player(self):
+    def update_rune_location(self):
         '''
         Checks if a rune icon is visible around the player's position.
 
         This function:
         - Uses template matching to detect the rune icon within this predefine box.
-        - Dynamically adjusts the detection threshold based on the rune detection level.
 
         Returns:
-            bool: True if a rune is found near the player, False otherwise.
+            nearest rune
         '''
         # Calculate bounding box
         h, w = self.img_frame.shape[:2]
-        x0 = max(0, self.loc_player[0] - self.cfg.rune_detect_box_width // 2)
-        y0 = max(0, self.loc_player[1] - self.cfg.rune_detect_box_height)
-        x1 = min(w, self.loc_player[0] + self.cfg.rune_detect_box_width // 2)
+        h_rune_box = self.cfg["rune_detect"]["box_height"]
+        w_rune_box = self.cfg["rune_detect"]["box_width"]
+        x0 = max(0, self.loc_player[0] - w_rune_box // 2)
+        y0 = max(0, self.loc_player[1] - h_rune_box)
+        x1 = min(w, self.loc_player[0] + w_rune_box // 2)
         y1 = min(h, self.loc_player[1])
 
         # Debug
@@ -844,7 +873,7 @@ class MapleStoryBot:
         max_rune_height = max(r.shape[0] for r in self.img_runes)
         max_rune_width  = max(r.shape[1] for r in self.img_runes)
         if (x1 - x0) < max_rune_width or (y1 - y0) < max_rune_height:
-            return False  # Skip check if box is out of range
+            return  # Skip check if box is out of range
 
         # Extract ROI near player
         img_roi = self.img_frame[y0:y1, x0:x1]
@@ -856,7 +885,7 @@ class MapleStoryBot:
             loc, score, _ = find_pattern_sqdiff(img_roi, img_rune, mask=mask)
             matches.append((i, loc, score, img_rune.shape))
 
-        # Matches box debug
+        # # Matches box debug
         # for i, (part_idx, loc, score, shape) in enumerate(matches):
         #     draw_rectangle(
         #         self.img_frame_debug,
@@ -868,14 +897,11 @@ class MapleStoryBot:
         #         text_height=0.4
         #     )
 
-        # Check scores and alignment
-        detect_thres = self.cfg.rune_detect_diff_thres
-
         # Filter out good matches
         good_matches = [
             (i, loc, score, shape)
             for (i, loc, score, shape) in matches
-            if score < detect_thres
+            if score < self.cfg["rune_detect"]["diff_thres"]
         ]
 
         # Remove overlapping matches
@@ -883,20 +909,24 @@ class MapleStoryBot:
 
         # Require at least 2 rune parts
         if len(good_matches) < 2:
-            return False
+            return
 
         # Horizontal: max distance between part's centers are small
         x_centers = [x0 + loc[0] + shape[1] // 2 for (_, loc, _, shape) in good_matches]
         if max(x_centers) - min(x_centers) > 10:
-            return False
+            return
 
         # Vertical: check if all Y's are strictly increasing
         ys = [y0 + loc[1] for (_, loc, _, _) in good_matches]
         if not all(ys[i] < ys[i + 1] for i in range(len(ys) - 1)):
-            return False
+            return
 
         logger.info(f"[Rune Detect] Found rune parts near player with scores:"
                     f" {[round(s, 2) for (_, _, s, _) in matches]}")
+
+        # Update rune location
+        self.loc_rune = (int(sum(x_centers) / len(x_centers)),
+                         int(sum(ys) / len(ys)))
 
         # Draw all parts on debug window
         for (i, loc, score, shape) in matches:
@@ -909,8 +939,12 @@ class MapleStoryBot:
                 text_height=0.5,
                 thickness=1
             )
+
+        # Draw rune location on debug window
+        cv2.circle(self.img_frame_debug, self.loc_rune,
+                   radius=5, color=(0, 255, 255), thickness=-1)
+
         screenshot(self.img_frame_debug, "rune_detected")
-        return True
 
     def is_in_rune_game(self):
         '''
@@ -932,8 +966,8 @@ class MapleStoryBot:
         self.img_frame = cv2.resize(self.frame, (1296, 759), interpolation=cv2.INTER_NEAREST)
 
         # Crop arrow detection box
-        x, y = self.cfg.arrow_box_start_point
-        size = self.cfg.arrow_box_size
+        x, y = self.cfg["rune_solver"]["arrow_box_coord"]
+        size = self.cfg["rune_solver"]["arrow_box_size"]
         img_roi = self.img_frame[y:y+size, x:x+size]
 
         # Check if arrow exist on screen
@@ -951,7 +985,7 @@ class MapleStoryBot:
             (0, 0, 255), str(round(best_score, 2))
         )
 
-        if best_score < self.cfg.arrow_box_diff_thres:
+        if best_score < self.cfg["rune_solver"]["arrow_box_diff_thres"]:
             logger.info(f"Arrow screen detected with score({score})")
             return True
         return False
@@ -974,10 +1008,12 @@ class MapleStoryBot:
         '''
         x0, y0 = self.loc_player_global
         h, w = self.img_route.shape[:2]
-        x_min = max(0, x0 - self.cfg.edge_teleport_box_width//2)
-        x_max = min(w, x0 + self.cfg.edge_teleport_box_width//2)
-        y_min = max(0, y0 - self.cfg.edge_teleport_box_height//2)
-        y_max = min(h, y0 + self.cfg.edge_teleport_box_height//2)
+        h_trigger_box = self.cfg["edge_teleport"]["trigger_box_height"]
+        w_trigger_box = self.cfg["edge_teleport"]["trigger_box_width"]
+        x_min = max(0, x0 - w_trigger_box//2)
+        x_max = min(w, x0 + w_trigger_box//2)
+        y_min = max(0, y0 - h_trigger_box//2)
+        y_max = min(h, y0 + h_trigger_box//2)
 
         # Debug: draw search box
         # draw_rectangle(
@@ -989,7 +1025,7 @@ class MapleStoryBot:
 
         # Find mask of matching pixels
         roi = self.img_route[y_min:y_max, x_min:x_max]
-        mask = np.all(roi == self.cfg.edge_teleport_color_code, axis=2)
+        mask = np.all(roi == self.cfg["edge_teleport"]["color_code"], axis=2)
         coords = np.column_stack(np.where(mask))
 
         # No edge pixel
@@ -1091,9 +1127,40 @@ class MapleStoryBot:
         update_img_frame_debug
         '''
         cv2.imshow("Game Window Debug",
-                   self.img_frame_debug[self.cfg.camera_ceiling:self.cfg.camera_floor, :])
+            self.img_frame_debug[self.cfg["camera"]["y_start"]:
+                                 self.cfg["camera"]["y_end"], :])
         # Update FPS timer
         self.t_last_frame = time.time()
+
+
+        
+    def channel_change(self):
+        '''
+        channel_change
+        '''
+        logger.info("[channel_change] Start")
+        coords = [
+            (1140, 730),  # 伺服器選單按鈕
+            (1140, 666),  # 頻道按鈕
+            (877, 161),  # 任意頻道
+            (585, 420),  # 確定
+            (877, 395),  # 登入後選角色
+            (888, 275),  # 確定角色
+        ]
+        window_title = self.cfg["game_window"]["title"]
+        for i, coord in enumerate(coords[:4]):
+            click_in_game_window(window_title, coord)
+            time.sleep(1)
+        time.sleep(25)
+        click_in_game_window(window_title, coords[4])
+        time.sleep(2)
+        click_in_game_window(window_title, coords[5])
+        self.kb.enable()
+        self.kb.set_command("stop")
+        time.sleep(10) #ensure if there's no lagging during log in
+        click_in_game_window(window_title, coords[4])
+        time.sleep(2)
+        click_in_game_window(window_title, coords[5])
 
     def run_once(self):
         '''
@@ -1107,8 +1174,8 @@ class MapleStoryBot:
             return
 
         # Make sure resolution is as expected
-        if self.cfg.window_size != self.frame.shape[:2]:
-            text = f"Unexpeted window size: {self.frame.shape[:2]} (expect {self.cfg.window_size})"
+        if self.cfg["game_window"]["size"] != self.frame.shape[:2]:
+            text = f"Unexpeted window size: {self.frame.shape[:2]} (expect {self.cfg["game_window"]["size"]})"
             logger.error(text)
             return
 
@@ -1119,7 +1186,8 @@ class MapleStoryBot:
         # Get minimap coordinate and size on game window
         minimap_result = get_minimap_loc_size(self.img_frame)
         if minimap_result is None:
-            logger.warning("Failed to get minimap location and size.")
+            pass
+            # logger.warning("Failed to get minimap location and size.") # too verbose
         else:
             x, y, w, h = minimap_result
             self.loc_minimap = (x, y)
@@ -1137,7 +1205,7 @@ class MapleStoryBot:
             self.img_route_debug = cv2.cvtColor(self.img_route, cv2.COLOR_RGB2BGR)
 
         # Update health monitor with current frame
-        self.health_monitor.update_frame(self.img_frame[self.cfg.camera_floor:, :])
+        self.health_monitor.update_frame(self.img_frame[self.cfg["camera"]["y_end"]:, :])
 
         # Draw HP/MP/EXP bar on debug window
         ratio_bars = [self.health_monitor.hp_ratio,
@@ -1155,11 +1223,11 @@ class MapleStoryBot:
             # print(self.health_monitor.loc_size_bars)
             x, y, w, h = self.health_monitor.loc_size_bars[i]
             self.img_frame_debug[y_s+30*i:y_s+h+30*i, x_s:x_s+w] = \
-                self.img_frame[self.cfg.camera_floor:, :][y:y+h, x:x+w]
+                self.img_frame[self.cfg["camera"]["y_end"]:, :][y:y+h, x:x+w]
 
-        # Check whether "PLease remove runes" warning appears on screen
+        # Check whether "Please remove runes" warning appears on screen
         if self.is_rune_warning():
-            self.rune_detect_level = 0
+            self.loc_rune = None
             self.switch_status("finding_rune") # Stop hunting and start find runes
 
         # Get player location in game window
@@ -1168,9 +1236,59 @@ class MapleStoryBot:
         # Get player location on minimap
         loc_player_minimap = get_player_location_on_minimap(
                                 self.img_minimap,
-                                minimap_player_color=self.cfg.minimap_player_color)
+                                minimap_player_color=self.cfg["minimap"]["player_color"])
         if loc_player_minimap:
             self.loc_player_minimap = loc_player_minimap
+
+        # Get other player location on minimap & change channel
+        '''
+        Detect red dot (0,0,255) and calculate the center to define as other player position.
+
+        Needs improvement - current implementation calculates a single center value for all detected red dots. 
+        When multiple players appear at once, this reduces the perceived displacement. 
+        Future enhancement should cluster red dots into separate groups when multiple players are detected simultaneously.
+        '''
+        loc_other_players = get_all_other_player_locations_on_minimap(self.img_minimap)
+        if loc_other_players:
+            # Calculate center value
+            xs = [x for (x, y) in loc_other_players]
+            ys = [y for (x, y) in loc_other_players]
+            if len(xs) == 0 or len(ys) == 0:
+                return
+            center_x = np.mean(xs)
+            center_y = np.mean(ys)
+            if np.isnan(center_x) or np.isnan(center_y):
+                return
+            center = (int(np.mean(xs)), int(np.mean(ys)))
+            #logger.warning(f"[RedDot] Center of mass = {center}")
+
+            # Change channel
+            if self.cfg["auto_change_channel"] == "true":
+                logger.warning("Player detected, immediately change channel.")
+                self.kb.set_command("stop")
+                self.kb.disable()
+                time.sleep(1)
+                self.channel_change()
+                self.red_dot_center_prev = None
+                return
+            elif self.cfg["auto_change_channel"] == "pixel":
+                if self.red_dot_center_prev is not None:
+                    dx = abs(center[0] - self.red_dot_center_prev[0])
+                    dy = abs(center[1] - self.red_dot_center_prev[1])
+                    total = dx + dy
+                    logger.debug(f"[RedDot] Movement dx={dx}, dy={dy}, total={total}")
+                    if total > self.cfg["other_player_move_pixel"]:
+                        logger.warning(f"Other player movement > {self.cfg["other_player_move_pixel"]}px detected, triggering channel change.")
+                        self.kb.set_command("stop")
+                        self.kb.disable()
+                        time.sleep(1)
+                        self.channel_change()
+                        self.red_dot_center_prev = None
+                        return
+                else:
+                    self.red_dot_center_prev = center
+        else:
+            self.red_dot_center_prev = None
 
         # Get player location on global map
         if self.args.patrol:
@@ -1179,36 +1297,51 @@ class MapleStoryBot:
             self.loc_player_global = self.get_player_location_on_global_map()
 
         # Check whether a rune icon is near player
-        if self.is_rune_near_player():
-            self.switch_status("near_rune")
+        if self.status == "finding_rune":
+            self.update_rune_location()
+            if self.loc_rune is not None:
+                self.switch_status("near_rune")
+                logger.info(abs(self.loc_player[0] - self.loc_rune[0]))
 
         # Check whether we entered the rune mini-game
         if self.status == "near_rune" and (not self.args.disable_control):
-            self.kb.set_command("stop") # stop character
-            time.sleep(0.1) # Wait for character to stop
-            self.kb.disable() # Disable kb thread during rune solving
+            # Update rune location
+            self.update_rune_location()
 
-            # Attempt to trigger rune
-            self.kb.press_key("up", 0.02)
-            time.sleep(1) # Wait for rune game to pop up
+            dt = time.time() - self.t_last_rune_trigger
+            dx = abs(self.loc_player[0] - self.loc_rune[0])
+            logger.info(f"[Near Rune] Distance to rune: {dx}")
 
-            # If entered the game, start solving rune
-            if self.is_in_rune_game():
-                self.solve_rune() # Blocking until runes solved
-                self.rune_detect_level = 0 # reset rune detect level
-                self.switch_status("hunting")
+            # Check if close enough to trigger the rune
+            if dt > self.cfg["rune_find"]["rune_trigger_cooldown"] and \
+                dx < self.cfg["rune_find"]["rune_trigger_distance"]:
 
-            # Restore kb thread
-            self.kb.enable()
+                self.kb.set_command("stop") # stop character
+                time.sleep(0.1) # Wait for character to stop
+                self.kb.disable() # Disable kb thread during rune solving
+
+                # Attempt to trigger rune
+                self.kb.press_key("up", 0.02)
+                time.sleep(1) # Wait for rune game to pop up
+
+                # If entered the game, start solving rune
+                if self.is_in_rune_game():
+                    self.solve_rune() # Blocking until runes solved
+                    self.switch_status("hunting")
+
+                # Restore kb thread
+                self.kb.enable()
+
+                self.t_last_rune_trigger = time.time()
 
         # Get monster search box
-        margin = self.cfg.monster_search_margin
+        margin = self.cfg["monster_detect"]["search_box_margin"]
         if self.args.attack == "aoe_skill":
-            dx = self.cfg.aoe_skill_range_x // 2 + margin
-            dy = self.cfg.aoe_skill_range_y // 2 + margin
-        elif self.args.attack == "magic_claw":
-            dx = self.cfg.magic_claw_range_x + margin
-            dy = self.cfg.magic_claw_range_y + margin
+            dx = self.cfg["aoe_skill"]["range_x"] // 2 + margin
+            dy = self.cfg["aoe_skill"]["range_y"] // 2 + margin
+        elif self.args.attack == "directional":
+            dx = self.cfg["directional_attack"]["range_x"] + margin
+            dy = self.cfg["directional_attack"]["range_y"] + margin
         else:
             logger.error(f"Unsupported attack mode: {self.args.attack}")
             return
@@ -1218,7 +1351,10 @@ class MapleStoryBot:
         y1 = min(self.img_frame.shape[0], self.loc_player[1] + dy)
 
         # Get monsters in the search box
-        self.monster_info = self.get_monsters_in_range((x0, y0), (x1, y1))
+        if self.status in ["hunting", "attacking"]:
+            self.monster_info = self.get_monsters_in_range((x0, y0), (x1, y1))
+        else:
+            self.monster_info = []
 
         # 檢查攻擊範圍內是否有怪物，並切換狀態
         has_monsters = self.has_monsters_in_attack_range()
@@ -1244,7 +1380,7 @@ class MapleStoryBot:
                 attack_direction = "I don't care"
             nearest_monster = self.get_nearest_monster()
 
-        elif self.args.attack == "magic_claw":
+        elif self.args.attack == "directional":
             # Get nearest monster to player
             monster_left  = self.get_nearest_monster(is_left = True)
             monster_right = self.get_nearest_monster(is_left = False)
@@ -1320,7 +1456,7 @@ class MapleStoryBot:
             x, y = self.loc_player
             h, w = self.img_frame.shape[:2]
             loc_player_ratio = float(x)/float(w)
-            left_ratio, right_ratio = self.cfg.patrol_range
+            left_ratio, right_ratio = self.cfg["patrol"]["range"]
 
             # Check if we need to change patrol direction
             if self.is_patrol_to_left and loc_player_ratio < left_ratio:
@@ -1328,13 +1464,13 @@ class MapleStoryBot:
             elif (not self.is_patrol_to_left) and loc_player_ratio > right_ratio:
                 self.patrol_turn_point_cnt += 1
 
-            if self.patrol_turn_point_cnt > self.cfg.turn_point_thres:
+            if self.patrol_turn_point_cnt > self.cfg["patrol"]["turn_point_thres"]:
                 self.is_patrol_to_left = not self.is_patrol_to_left
                 self.patrol_turn_point_cnt = 0
 
             # Set command for patrol mode
             # Use proper attack range checking instead of just checking if monsters exist
-            if (time.time() - self.t_patrol_last_attack > self.cfg.patrol_attack_interval and 
+            if (time.time() - self.t_patrol_last_attack > self.cfg["patrol"]["patrol_attack_interval"] and 
                 len(self.monster_info) > 0 and nearest_monster is not None):
                 # Check if monster is actually in attack range
                 if attack_direction == "I don't care" or attack_direction == "left" or attack_direction == "right":
@@ -1356,13 +1492,13 @@ class MapleStoryBot:
                         logger.debug(f"Change to new route:{self.idx_routes}")
                     command = color_code["action"]
 
-                # teleport away from edge to avoid falling off cliff
-                if self.is_near_edge() and \
-                    time.time() - self.t_last_teleport > self.cfg.teleport_cooldown:
-                    command = command.replace("walk", "teleport")
-                    self.t_last_teleport = time.time() # update timer
+            # teleport away from edge to avoid falling off cliff
+            if self.is_near_edge() and \
+                time.time() - self.t_last_teleport > self.cfg["teleport"]["cooldown"]:
+                command = command.replace("walk", "teleport")
+                self.t_last_teleport = time.time() # update timer
 
-        if self.cfg.teleport_key == "": # disable teleport skill
+        if self.cfg["key"]["teleport"] == "": # disable teleport skill
             command = command.replace("teleport", "jump")
 
         # Special logic for each status, overwrite color code action
@@ -1374,39 +1510,28 @@ class MapleStoryBot:
             elif not self.args.patrol and self.is_player_stuck():
                 command = self.get_random_action()
             elif command in ["up", "down", "jump right", "jump left"]:
-                pass # Don't attack or heal while character is on rope or jumping
-            # Note: HP/MP monitoring is now handled by separate HealthMonitor thread
-            elif attack_direction == "I don't care" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
-                command = "attack"
-                self.t_last_attack = time.time()
-            elif attack_direction == "left" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
-                command = "attack left"
-                self.t_last_attack = time.time()
-            elif attack_direction == "right" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
-                command = "attack right"
-                self.t_last_attack = time.time()
+                pass # Don't attack while character is on rope or jumping
 
         # 在attacking狀態下，只進行攻擊，不進行移動
         elif self.status == "attacking":
             if not self.args.patrol and self.is_player_stuck():
-                command = self.get_random_action()           
+                command = self.get_random_action()          
+            elif command in ["up", "down", "jump right", "jump left"]:
+                pass # Don't attack while character is on rope or jumping
             elif attack_direction == "I don't care" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
                 command = "attack"
                 self.t_last_attack = time.time()
             elif attack_direction == "left" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
                 command = "attack left"
                 self.t_last_attack = time.time()
             elif attack_direction == "right" and nearest_monster is not None and \
-                time.time() - self.t_last_attack > self.cfg.attack_cooldown:
+                time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
                 command = "attack right"
                 self.t_last_attack = time.time()
             else:
-                command = "stop"  # 沒有可攻擊的怪物時停止移動
+                command = "stop"  # 沒有可攻擊的怪物時停止動作
 
         elif self.status == "finding_rune":
             if self.is_player_stuck():
@@ -1417,16 +1542,13 @@ class MapleStoryBot:
                 self.switch_status("hunting")
 
             # Check if finding rune timeout
-            if time.time() - self.t_last_switch_status > self.cfg.rune_finding_timeout:
-                self.rune_detect_level = 0 # reset level
+            if time.time() - self.t_last_switch_status > self.cfg["rune_find"]["timeout"]:
                 self.switch_status("resting")
-            # Check if need to raise level to lower the detection threshold
-            dt = int(time.time() - self.t_last_switch_status)
-            self.rune_detect_level = dt // self.cfg.rune_detect_level_raise_interval
+                # TODO: terminate the script
 
         elif self.status == "near_rune":
             # Stay in near_rune status for only a few seconds
-            if time.time() - self.t_last_switch_status > self.cfg.near_rune_duration:
+            if time.time() - self.t_last_switch_status > self.cfg["rune_find"]["near_rune_duration"]:
                 self.switch_status("hunting")
 
         elif self.status == "resting":
@@ -1466,7 +1588,7 @@ class MapleStoryBot:
         ### Debug Windows ###
         #####################
         # Don't show debug window to save system resource
-        if not self.cfg.show_debug_window:
+        if not self.cfg["system"]["show_debug_window"]:
             return
 
         # Print text on debug image
@@ -1479,8 +1601,8 @@ class MapleStoryBot:
         if not self.args.patrol:
             self.img_route_debug = cv2.resize(
                         self.img_route_debug, (0, 0),
-                        fx=self.cfg.minimap_upscale_factor,
-                        fy=self.cfg.minimap_upscale_factor,
+                        fx=self.cfg["minimap"]["debug_window_upscale"],
+                        fy=self.cfg["minimap"]["debug_window_upscale"],
                         interpolation=cv2.INTER_NEAREST)
             cv2.imshow("Route Map Debug", self.img_route_debug)
 
@@ -1542,8 +1664,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--attack',
         type=str,
-        default='magic_claw',
-        help='Choose attack method, "magic_claw", "aoe_skill"'
+        default='directional',
+        help='Choose attack method, "directional", "aoe_skill"'
     )
 
     parser.add_argument(
@@ -1551,6 +1673,13 @@ if __name__ == '__main__':
         type=str,
         default='example',
         help='Choose nametag png file in nametag/'
+    )
+
+    parser.add_argument(
+        '--cfg',
+        type=str,
+        default='edit_me',
+        help='Choose customized config yaml file in config/'
     )
 
     try:
@@ -1572,7 +1701,7 @@ if __name__ == '__main__':
 
             # Cap FPS to save system resource
             frame_duration = time.time() - t_start
-            target_duration = 1.0 / mapleStoryBot.cfg.fps_limit
+            target_duration = 1.0 / mapleStoryBot.cfg["system"]["fps_limit_main"]
             if frame_duration < target_duration:
                 time.sleep(target_duration - frame_duration)
 

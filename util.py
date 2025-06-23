@@ -10,6 +10,9 @@ import platform
 
 #
 import numpy as np
+import yaml
+import pyautogui
+import pygetwindow as gw
 
 # Local import
 from logger import logger
@@ -21,6 +24,32 @@ def is_mac():
 
 def is_windows():
     return OS_NAME == 'Windows'
+
+def load_yaml(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        logger.info(f"Load yaml: {path}")
+        data = yaml.safe_load(f) or {}
+        return convert_lists_to_tuples(data)
+
+def save_yaml(data, path):
+    with open(path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, default_flow_style=False)
+
+def override_cfg(cfg, cfg_override):
+    for k, v in cfg_override.items():
+        if isinstance(v, dict) and isinstance(cfg.get(k), dict):
+            cfg[k] = override_cfg(cfg.get(k, {}), v)
+        else:
+            cfg[k] = v
+    return cfg
+
+def convert_lists_to_tuples(obj):
+    if isinstance(obj, list):
+        return tuple(convert_lists_to_tuples(x) for x in obj)
+    elif isinstance(obj, dict):
+        return {k: convert_lists_to_tuples(v) for k, v in obj.items()}
+    else:
+        return obj
 
 def load_image(path, mode=cv2.IMREAD_COLOR):
     '''
@@ -315,7 +344,7 @@ def get_minimap_loc_size(img_frame):
 
         return x_minimap, y_minimap, w_minimap, h_minimap
 
-    logger.warning("Minimap not found in the game frame.")
+    # logger.warning("Minimap not found in the game frame.")
     return None  # minimap not found
 
 def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 255)):
@@ -347,6 +376,14 @@ def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 
 
     return loc_player_minimap
 
+def get_all_other_player_locations_on_minimap(img_minimap, red_bgr=(0, 0, 255)):
+    red_bgr = tuple(map(int, red_bgr))
+    mask = cv2.inRange(img_minimap, red_bgr, red_bgr)
+    coords = cv2.findNonZero(mask)
+    if coords is None or len(coords) < 3:
+        return []
+    return [tuple(pt[0]) for pt in coords]  # List of (x, y)
+    
 def get_bar_ratio(img):
     '''
     Get HP/MP/EXP bar ratio with given bar image
@@ -423,3 +460,11 @@ def nms_matches(matches, iou_thresh=0.0):
         i += 1
 
     return filtered
+
+def click_in_game_window(window_title, coord):
+    '''
+    Mouse click on a game window coordinate
+    '''
+    game_window = gw.getWindowsWithTitle(window_title)[0]
+    win_left, win_top = game_window.left, game_window.top
+    pyautogui.click(win_left + coord[0], win_top + coord[1])
