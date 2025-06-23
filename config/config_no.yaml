@@ -179,7 +179,7 @@ monster_detect:
 # "": Off
 # "true": Change channel once other player is detected
 # "pixel": Change channel once other player move set pixels in other_player_move_pixel
-auto_change_channel: ""
+auto_change_channel: "pixel"
 other_player_move_pixel: 10  # only work when auto_change_channel == "pixel" 
 
 # ────────────────
@@ -190,7 +190,7 @@ other_player_move_pixel: 10  # only work when auto_change_channel == "pixel"
 route:
   up_drag_duration: 1.0       # ⬆️ Hold 'up' key to climb ropes/ladders (in seconds)
   down_drag_duration: 1.0     # ⬇️ Hold 'down' key to descend ropes/ladders (in seconds)
-  search_range: 10            # 🔍 Radius (in pixels) to search for the nearest route color around the player
+  search_range: 5            # 🔍 Radius (in pixels) to search for the nearest route color around the player
   jump_down_cooldown: 3.0     # ⏱️ Cooldown (in seconds) for 'jump down' action to prevent continuous descent
 
   # 🎨 Color-coded(RGB) actions for route navigation
@@ -229,7 +229,7 @@ watchdog:
 rune_warning:
   top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.2             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.3             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -275,7 +275,7 @@ rune_solver:
 
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
-  debug_window_upscale: 4         # 🔍 Zoom factor for the route debug image (for visualization only)
+  debug_window_upscale: 3.5         # 🔍 Zoom factor for the route debug image (for visualization only)
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
