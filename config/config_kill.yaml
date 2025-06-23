@@ -20,7 +20,7 @@
 key:
   aoe_skill: "s"            # 💥 AoE skill (e.g., Cleric's heal or Mage's lightning)
   directional_attack: "s"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
-  teleport: ""             # 🌀 Teleport skill. Set to "" if not usable
+  teleport: "space"             # 🌀 Teleport skill. Set to "" if not usable
   jump: "v"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
@@ -100,7 +100,7 @@ teleport:
 # If your character isn't a Mage, it will perform a jump instead.
 
 edge_teleport:
-  enable: False                 # ✅ Enable or disable this feature
+  enable: True                 # ✅ Enable or disable this feature
   trigger_box_width: 20        # ↔️ Width of the edge detection box (in pixels)
   trigger_box_height: 10       # ↕️ Height of the edge detection box (in pixels)
   color_code: [255, 127, 127]  # 🎨 RGB color code to represent platform edge
