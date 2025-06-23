@@ -823,7 +823,7 @@ class MapleStoryBot:
         _, score, _ = find_pattern_sqdiff(
                         self.img_frame_gray[y0:y1, x0:x1],
                         self.img_rune_warning)
-        if self.status == "hunting" and score < self.cfg["rune_warning"]["diff_thres"]:
+        if self.status == ("hunting" or "attacking") and score < self.cfg["rune_warning"]["diff_thres"]:
             logger.info(f"[is_rune_warning] Detect rune warning on screen with score({score})")
             return True
         else:
@@ -1334,15 +1334,6 @@ class MapleStoryBot:
         else:
             self.monster_info = []
 
-        # 檢查攻擊範圍內是否有怪物，並切換狀態
-        has_monsters = self.has_monsters_in_attack_range()
-        
-        # 狀態切換邏輯
-        if has_monsters and self.status == "hunting" and command not in ["up", "down"]:
-            self.switch_status("attacking")
-        elif not has_monsters and self.status == "attacking":
-            self.switch_status("hunting")
-
         # Simple combat state: if we see monsters, update the timer
         if len(self.monster_info) > 0:
             self.t_last_monster_seen = time.time()
@@ -1429,6 +1420,12 @@ class MapleStoryBot:
                 debug_text = f"L:{distance_left:.0f}({left_side_ok}) R:{distance_right:.0f}({right_side_ok}) Dir:{attack_direction}"
                 cv2.putText(self.img_frame_debug, debug_text,
                            (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+                
+        # 狀態切換邏輯，當有攻擊指令時切換為攻擊狀態
+        if attack_direction is not None and self.status == "hunting" and command not in ["up", "down"]:
+            self.switch_status("attacking")
+        elif attack_direction is None and self.status == "attacking":
+            self.switch_status("hunting")
 
         if self.args.patrol:
             x, y = self.loc_player
@@ -1521,7 +1518,13 @@ class MapleStoryBot:
 
             # Check if finding rune timeout
             if time.time() - self.t_last_switch_status > self.cfg["rune_find"]["timeout"]:
-                self.switch_status("resting")
+                logger.warning("Rune timeout, change channel.")
+                self.kb.set_command("stop")
+                self.kb.disable()
+                time.sleep(1)
+                self.channel_change()
+                self.red_dot_center_prev = None
+                self.switch_status("hunting")
                 # TODO: terminate the script
 
         elif self.status == "near_rune":
@@ -1583,31 +1586,6 @@ class MapleStoryBot:
                         fy=self.cfg["minimap"]["debug_window_upscale"],
                         interpolation=cv2.INTER_NEAREST)
             cv2.imshow("Route Map Debug", self.img_route_debug)
-
-
-    def has_monsters_in_attack_range(self):
-        '''
-        檢查攻擊範圍內是否有怪物
-        
-        Returns:
-            bool: True if monsters are in attack range, False otherwise
-        '''
-        if self.args.attack == "aoe_skill":
-            # AOE技能範圍檢測
-            x0 = max(0, self.loc_player[0] - self.cfg.aoe_skill_range_x//2)
-            x1 = min(self.img_frame.shape[1], self.loc_player[0] + self.cfg.aoe_skill_range_x//2)
-            y0 = max(0, self.loc_player[1] - self.cfg.aoe_skill_range_y//2)
-            y1 = min(self.img_frame.shape[0], self.loc_player[1] + self.cfg.aoe_skill_range_y//2)
-            monsters = self.get_monsters_in_range((x0, y0), (x1, y1))
-            return len(monsters) > 0
-            
-        elif self.args.attack == "magic_claw":
-            # 魔法爪範圍檢測
-            monster_left = self.get_nearest_monster(is_left=True)
-            monster_right = self.get_nearest_monster(is_left=False)
-            return monster_left is not None or monster_right is not None
-            
-        return False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
