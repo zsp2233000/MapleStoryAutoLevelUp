@@ -313,6 +313,17 @@ game_window:
   title: "MapleStory Worlds-Artale (繁體中文版)"  # 🎮 Game window title (used to detect the correct window)
   size: [752, 1282]                              # 📐 Game window size [height, width] in pixels
 
+
+# ─────────────────────────────
+# 📩 Email
+# ─────────────────────────────
+# Send email to notify user
+email:
+  enable: False
+  sender_email: "maplestoryautolevelup@gmail.com"
+  sender_password: "lvxfdhthvvrcuojj"
+  receiver_email: "luckyyu910645@gmailcom" # Put your email here
+
 # ────────────────
 # ⚙️ System Settings
 # ────────────────
