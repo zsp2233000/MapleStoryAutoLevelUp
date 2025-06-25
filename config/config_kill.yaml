@@ -53,7 +53,7 @@ buff_skill:
 directional_attack:
   range_x: 180               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
-  cooldown: 0.05             # ⏱️ Time between attacks (in seconds)
+  cooldown: 0.1             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
 
 # ────────────────
@@ -323,4 +323,4 @@ system:
   fps_limit_window_capturor: 15     # 🚥 Window capture thread FPS
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
-  show_debug_window: True           # 🐞 Show debug window (disable to save resources)
+  show_debug_window: False           # 🐞 Show debug window (disable to save resources)
