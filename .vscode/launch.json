@@ -14,7 +14,9 @@
                 "--attack",
                 "aoe_skill",
                 "--nametag",
-                "killua"
+                "killua",
+                "--cfg",
+                "kill"
             ],
         },
 
@@ -29,6 +31,8 @@
                 "--monster",
                 "black_axe_stump,moon_bunny,hodori",
                 "--nametag",
+                "no",
+                "--cfg",
                 "no"
             ]
         },
@@ -43,7 +47,9 @@
                 "--monster",
                 "evolved_ghost",
                 "--nametag",
-                "killua"
+                "killua",
+                "--cfg",
+                "kill"
             ]
         },
         {
