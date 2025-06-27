@@ -188,7 +188,7 @@ other_player_move_pixel: 10  # only work when auto_change_channel == "pixel"
 # The character follows a pre-defined route image (route*.png) using color-coded commands.
 
 route:
-  up_drag_duration: 1.0       # ⬆️ Hold 'up' key to climb ropes/ladders (in seconds)
+  up_drag_duration: 2.0       # ⬆️ Hold 'up' key to climb ropes/ladders (in seconds)
   down_drag_duration: 1.0     # ⬇️ Hold 'down' key to descend ropes/ladders (in seconds)
   search_range: 5            # 🔍 Radius (in pixels) to search for the nearest route color around the player
   jump_down_cooldown: 3.0     # ⏱️ Cooldown (in seconds) for 'jump down' action to prevent continuous descent
@@ -323,4 +323,4 @@ system:
   fps_limit_window_capturor: 15     # 🚥 Window capture thread FPS
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
-  show_debug_window: False          # 🐞 Show debug window (disable to save resources)
+  show_debug_window: True          # 🐞 Show debug window (disable to save resources)
