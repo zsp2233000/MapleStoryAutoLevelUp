@@ -1046,9 +1046,8 @@ class MapleStoryBot:
         '''
         get_random_action
         '''
-        # 從所有可能的動作中排除 walk right 和 walk left
-        available_actions = [action for action in self.cfg.color_code.values() 
-                           if action not in ["walk right", "walk left"]]
+        available_actions = [action for action in self.color_code.values() 
+                           if action not in ["walk right", "walk left, stop, goal, jump"]]
 
         action = random.choice(available_actions)
         
