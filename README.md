@@ -9,7 +9,9 @@ An auto leveling up script for Maple Story Artale
 This work purely-based on Computer Vision technique, it doesn't required access game's memory. Instead, it detects image pattern(i.e., player nametag and monsters) on game window screen and send simulated keyboard command to the game to control player's character.
 
 ✅ No memory access required
+
 ✅ Purely screen-based CV detection
+
 ✅ Simulates real keyboard input
 
 ## Environment
@@ -18,6 +20,13 @@ Windows11
 Python3.12
 
 OpenCV4.11
+
+Note: this project DOES NOT support virtual environment(VM), it's only for recreational and academical use.
+
+## Support Server
+This project is mostly developed and tested on MapleStory Artale Taiwan Server
+
+It also supports N.A server, use '--cfg na' to load customized N.A config 
 
 ## Install dependency
 ```
