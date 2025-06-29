@@ -1048,8 +1048,7 @@ class MapleStoryBot:
         '''
         get_random_action
         '''
-        available_actions = [action for action in self.color_code.values() 
-                           if action not in ["walk right", "walk left, stop, goal, jump"]]
+        available_actions = ["walk left","walk right", "jump left", "jump right", "down"]
 
         action = random.choice(available_actions)
         
@@ -1547,9 +1546,9 @@ class MapleStoryBot:
                 command = self.get_random_action()
 
             # If the HP is reduced switch to hurting (other player probably help solved the rune)
-            if time.time() - self.health_monitor.last_hp_reduce_time < 3:
-                self.t_rune_finding_start = None
-                self.switch_status("hunting")
+            # if time.time() - self.health_monitor.last_hp_reduce_time < 3:
+            #     self.t_rune_finding_start = None
+            #     self.switch_status("hunting")
 
             # Check if finding rune timeout using dedicated timer
             if (self.t_rune_finding_start is not None and 
