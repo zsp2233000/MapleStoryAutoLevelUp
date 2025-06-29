@@ -29,6 +29,7 @@ class HealthMonitor:
         self.t_last_hp_reduce = 0
         self.t_last_run = 0
         self.t_hp_watch_dog = time.time()
+        self.t_mp_watch_dog = time.time()  # 新增 MP watchdog
 
         # Frame data (will be updated by main thread)
         self.img_frame = None
@@ -223,7 +224,17 @@ class HealthMonitor:
                             self.kb.press_key(self.cfg["key"]["return_home"]) # Return home
                             self.is_terminated = True # Terminate Health monitor
                             self.kb.is_terminated = True # Terminate AutoBot
-
+                    # MP watchdog 機制
+                    if self.mp_ratio >= mp_thres:
+                        self.t_mp_watch_dog = t_cur # reset mp watchdog
+                    else:
+                        if t_cur - self.t_mp_watch_dog > watchdog_timeout:
+                            logger.warning(f"[Health Monitor]: MP({self.mp_ratio*100:.1f}%) < {mp_thres*100:.1f}% "
+                                           f"for {round(t_cur - self.t_mp_watch_dog, 2)} seconds.")
+                            logger.warning(f"[Health Monitor]: Return home because MP potion is used up.")
+                            self.kb.press_key(self.cfg["key"]["return_home"]) # Return home
+                            self.is_terminated = True # Terminate Health monitor
+                            self.kb.is_terminated = True # Terminate AutoBot
                 # Check if need MP (with cooldown)
                 if (self.mp_ratio <= mp_thres and t_cur - self.t_last_mp > mp_cd):
                     self._add_mp()
