@@ -1318,6 +1318,7 @@ class MapleStoryBot:
         self.img_frame_debug = self.img_frame.copy()
 
         self.profiler.mark("Image Preprocessing")
+        command = ""
 
         # Get minimap coordinate and size on game window
         minimap_result = get_minimap_loc_size(self.img_frame)
@@ -1718,6 +1719,7 @@ class MapleStoryBot:
                 if self.cfg["rune_find"]["timeout_action"] == "change_channel":
                     # Change channel to avoid rune
                     self.channel_change()
+                    self.t_rune_finding_start = None
                 else:
                     # Return home
                     self.kb.press_key(self.cfg["key"]["return_home_key"])

@@ -24,7 +24,7 @@ key:
   jump: "v"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
-  return_home: ""       # 🔁 Key to use return home scroll.
+  return_home: "8"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
 
 # ────────────────
@@ -53,7 +53,7 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 470               # ↔️ Horizontal attack range (in pixels)
+  range_x: 300               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.3             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
