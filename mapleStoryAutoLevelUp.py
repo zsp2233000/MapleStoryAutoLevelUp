@@ -841,7 +841,7 @@ class MapleStoryBot:
         _, score, _ = find_pattern_sqdiff(
                         self.img_frame_gray[y0:y1, x0:x1],
                         self.img_rune_warning)
-        if self.status == ("hunting" or "attacking") and score < self.cfg["rune_warning"]["diff_thres"]:
+        if self.status in ("hunting", "attacking") and score < self.cfg["rune_warning"]["diff_thres"]:
             logger.info(f"[is_rune_warning] Detect rune warning on screen with score({score})")
             return True
         else:
