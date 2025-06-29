@@ -40,13 +40,20 @@ def save_yaml(data, path):
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, default_flow_style=False)
 
-def override_cfg(cfg, cfg_override):
-    for k, v in cfg_override.items():
-        if isinstance(v, dict) and isinstance(cfg.get(k), dict):
-            cfg[k] = override_cfg(cfg.get(k, {}), v)
+def override_cfg(base, override):
+    '''
+    override_cfg
+    Return a new dictionary
+    '''
+    result = {}
+    for k in set(base) | set(override):
+        if k in base and k in override and isinstance(base[k], dict) and isinstance(override[k], dict):
+            result[k] = override_cfg(base[k], override[k])
+        elif k in override:
+            result[k] = override[k]
         else:
-            cfg[k] = v
-    return cfg
+            result[k] = base[k]
+    return result
 
 def convert_lists_to_tuples(obj):
     if isinstance(obj, list):
@@ -138,7 +145,7 @@ def get_iou(box1, box2):
 
     return inter_area / union
 
-def screenshot(img, prefix="screenshot"):
+def screenshot(img, suffix="screenshot"):
     '''
     Save the given image as a screenshot file.
 
@@ -150,10 +157,10 @@ def screenshot(img, prefix="screenshot"):
     '''
 
     os.makedirs("screenshot", exist_ok=True)  # ensure directory exists
-    
+
     # Generate timestamp string
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"screenshot/{prefix}_{timestamp}.png"
+    filename = f"screenshot/{timestamp}_{suffix}.png"
     cv2.imwrite(filename, img)
     logger.info(f"Screenshot saved: {filename}")
 
@@ -524,3 +531,27 @@ def check_inbox(email_addr, password, token):
 
     imap.logout()
     return None
+
+def mask_route_colors(img_map, img_route, color_code):
+    """
+    Masks all pixels in img_route where img_map contains any route color.
+    Pixels at those positions in img_route are set to black (0,0,0).
+    """
+    # Parse color_code keys to list of RGB tuples
+    target_colors = [tuple(map(int, color_str.split(','))) for color_str in color_code.keys()]
+
+    # Ensure dimensions match
+    if img_map.shape[:2] != img_route.shape[:2]:
+        logger.warning(f"[mask_route_colors] Resizing img_map from {img_map.shape} to {img_route.shape}")
+        img_map = cv2.resize(img_map, (img_route.shape[1], img_route.shape[0]))
+
+    # Build mask for each color
+    mask = np.zeros(img_map.shape[:2], dtype=bool)
+    for color in target_colors:
+        matches = np.all(img_map == color, axis=-1)
+        mask |= matches
+
+    # Apply mask to img_route (set those pixels to black)
+    img_route[mask] = (0, 0, 0)
+
+    return img_route
