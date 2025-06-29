@@ -24,6 +24,8 @@ key:
   jump: "v"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
+  return_home: ""       # 🔁 Key to use return home scroll.
+  party: "p"                # ⌨️ Party window shortcut
 
 # ────────────────
 # 💫 Buff Skill
@@ -76,11 +78,13 @@ aoe_skill:
 health_monitor:
   enable: True             # ✅ Enable or disable health monitor
   force_heal: False      # 🛡️ Heal first — stop attacking until HP is restored
-  add_hp_ratio: 0        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
+  add_hp_ratio: 0.2        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
   add_mp_ratio: 0        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
   add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
   fps_limit: 1            # 🚥 Loop rate for the health monitor thread
+  return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
+  return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
 
 # ────────────────
 # 🌀 Mage Teleport
@@ -104,6 +108,19 @@ edge_teleport:
   trigger_box_width: 20        # ↔️ Width of the edge detection box (in pixels)
   trigger_box_height: 10       # ↕️ Height of the edge detection box (in pixels)
   color_code: [255, 127, 127]  # 🎨 RGB color code to represent platform edge
+
+# ────────────────
+# ❤️ Party Red Bar Detection
+# ────────────────
+# Detects your character's party red on on the game window to estimate player location.
+# This feature will only turn on when nametag.enable == False
+party_red_bar:
+  lower_red: [0, 60, 60]   # ❤️ HSV, darker red of party health bar
+  upper_red: [0, 100, 100] # ❤️ HSV, brighter red of party health bar
+
+  # 🎯 Offset from the top-left corner of the party red bar to the character center
+  offset: [20, 66]  # in pixels
+  create_party_button_thres: 0.1 # 📏 threshold for create party button matching
 
 # ────────────────
 # 🏷️ NameTag Recognition
@@ -229,7 +246,7 @@ watchdog:
 rune_warning:
   top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.33             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.30             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -248,9 +265,11 @@ rune_detect:
 rune_find:
   timeout: 300               # ⏳ Maximum time (in seconds) to keep searching before giving up
                               # If the timeout is reached, the bot will fallback to route_rest.png and rest.
+  timeout_action: "change_channel" # "go_home"
   near_rune_duration: 10       # 🕒 Duration to interact with rune when a positive detection occurs
   rune_trigger_cooldown: 0.3    # 🕒 Cooldown for 'up' key rune trigger
   rune_trigger_distance: 20
+  rune_trigger_distance_y: 200
 
 # ─────────────────────────────
 # 🧩 Rune Mini-Game Solver
@@ -276,6 +295,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
+  offset: [0, 0]                  # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
@@ -327,3 +347,12 @@ system:
   show_debug_window: True           # 🐞 Show debug window (disable to save resources)
   server: "TW"                      # "TW", "NA"
   language: "chinese"               # "english" "chinese"
+
+# ────────────────
+# ⚙️ Profiler
+# ────────────────
+# For FPS/performance debugging
+# When the FPS is lower than 10, please use profiler to find which code block is costing more time 
+profiler:
+  enable: False # To print the profiler result or not
+  print_frequency: 30 # Print profiler result for every 30 frames
