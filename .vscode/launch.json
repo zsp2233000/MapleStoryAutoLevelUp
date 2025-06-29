@@ -19,7 +19,6 @@
                 "kill"
             ],
         },
-
         {
             "name": "烏山深處-no",
             "type": "debugpy",
@@ -53,26 +52,7 @@
             ]
         },
         {
-            "name": "Debug MapleStory Bot - Ant Cave 2",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
-            "args": [
-                "--map",
-                "ant_cave_2",
-                "--monster",
-                "skeleton_soldier,skeleton_officer"
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
-        },
-        {
-            "name": "Debug MapleStory Bot - Fire Land 2",
+            "name": "火焰之地2-owen",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
@@ -80,34 +60,44 @@
                 "--map",
                 "fire_land_2",
                 "--monster",
-                "fire_pig"
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
+                "black_axe_stump,fire_pig",
+                "--nametag",
+                "owen",
+                "--cfg",
+                "owen"
+            ]
         },
         {
-            "name": "Debug MapleStory Bot - North Forest Training Ground 2",
+            "name": "黑肥肥領土1-owen",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
             "args": [
                 "--map",
-                "north_forest_training_ground_2",
+                "land_of_wild_boar",
                 "--monster",
-                "green_mushroom,mushroom"
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
+                "wild_boar",
+                "--nametag",
+                "owen",
+                "--cfg",
+                "owen"
+            ]
+        },
+        {
+            "name": "黑肥肥領土1-mao",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "land_of_wild_boar",
+                "--monster",
+                "wild_boar",
+                "--nametag",
+                "mao",
+                "--cfg",
+                "mao"
+            ]
         },
         {
             "name": "Debug Legacy MapleStory Bot",

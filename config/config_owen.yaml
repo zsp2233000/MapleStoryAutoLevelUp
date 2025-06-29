@@ -18,10 +18,10 @@
 #   - "shift":  Shift key
 
 key:
-  aoe_skill: "s"            # 💥 AoE skill (e.g., Cleric's heal or Mage's lightning)
-  directional_attack: "s"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
-  teleport: "space"             # 🌀 Teleport skill. Set to "" if not usable
-  jump: "v"             # 🦘 Jump key
+  aoe_skill: "r"            # 💥 AoE skill (e.g., Cleric's heal or Mage's lightning)
+  directional_attack: "r"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
+  teleport: ""             # 🌀 Teleport skill. Set to "" if not usable
+  jump: "space"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
 
@@ -39,8 +39,8 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["3"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [300]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  keys: ["0"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  cooldown: [290]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -51,9 +51,9 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 180               # ↔️ Horizontal attack range (in pixels)
+  range_x: 120               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
-  cooldown: 0.1             # ⏱️ Time between attacks (in seconds)
+  cooldown: 0.3             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
 
 # ────────────────
@@ -63,7 +63,7 @@ directional_attack:
 # Examples: Cleric’s Heal, Mage’s Lightning Bolt
 
 aoe_skill:
-  range_x: 240               # ↔️ Horizontal skill range (in pixels)
+  range_x: 100               # ↔️ Horizontal skill range (in pixels)
   range_y: 70               # ↕️ Vertical skill range (in pixels)
 
 # ────────────────
@@ -100,7 +100,7 @@ teleport:
 # If your character isn't a Mage, it will perform a jump instead.
 
 edge_teleport:
-  enable: True                 # ✅ Enable or disable this feature
+  enable: False                 # ✅ Enable or disable this feature
   trigger_box_width: 20        # ↔️ Width of the edge detection box (in pixels)
   trigger_box_height: 10       # ↕️ Height of the edge detection box (in pixels)
   color_code: [255, 127, 127]  # 🎨 RGB color code to represent platform edge
@@ -117,16 +117,16 @@ nametag:
   mode: "grayscale"  # Options: "grayscale", "white_mask"
 
   # 🎯 Offset from the top-left corner of the matched nametag to the character center
-  offset: [-20, 35]  # in pixels
+  offset: [-37, 35]  # in pixels
 
   # 📏 Matching threshold
-  diff_thres: 0.2     # [0.0 ~ 1.0] — lower = more tolerant, higher = stricter
+  diff_thres: 0.1     # [0.0 ~ 1.0] — lower = more tolerant, higher = stricter
 
   # 🧠 Global detection fallback
   # If the diff is higher than this threshold, do a full-frame search.
   # If lower, search near the last known location to save time.
   # Set to 0.0 to disable this optimization
-  global_diff_thres: 0.2
+  global_diff_thres: 0.1
 
   # ✂️ Split detection
   # To avoid occlusion from ladders or background objects,
@@ -168,7 +168,7 @@ monster_detect:
   # 💡 Feel free to test different modes to find what works best for your setup.
   mode: "contour_only"         # 🧠 Options: "color", "grayscale", "contour_only", "template_free"
   diff_thres: 0.8              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
-  search_box_margin: 50        # ➕ Additional margin(in pixels) around the attack box for monster searching
+  search_box_margin: 70        # ➕ Additional margin(in pixels) around the attack box for monster searching
   contour_blur: 5              # 🌫️ Gaussian blur kernel size used for contour smoothing (in "contour_only" mode).
   with_enemy_hp_bar: True      # ❤️ Enable smarter detection using enemy HP bars.
   hp_bar_color: [71, 204, 64]  # 💚 Enemy HP bar color (in BGR format)
@@ -188,7 +188,7 @@ other_player_move_pixel: 10  # only work when auto_change_channel == "pixel"
 # The character follows a pre-defined route image (route*.png) using color-coded commands.
 
 route:
-  up_drag_duration: 1.0       # ⬆️ Hold 'up' key to climb ropes/ladders (in seconds)
+  up_drag_duration: 2.0       # ⬆️ Hold 'up' key to climb ropes/ladders (in seconds)
   down_drag_duration: 1.0     # ⬇️ Hold 'down' key to descend ropes/ladders (in seconds)
   search_range: 5            # 🔍 Radius (in pixels) to search for the nearest route color around the player
   jump_down_cooldown: 3.0     # ⏱️ Cooldown (in seconds) for 'jump down' action to prevent continuous descent
@@ -229,7 +229,7 @@ watchdog:
 rune_warning:
   top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.3             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.33             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -275,7 +275,7 @@ rune_solver:
 
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
-  debug_window_upscale: 3.5       # 🔍 Zoom factor for the route debug image (for visualization only)
+  debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
@@ -318,9 +318,12 @@ game_window:
 # Controls performance and behavior of core system threads.
 
 system:
-  fps_limit_main: 15                # 🚥 Main loop FPS – controls how fast the main thread runs
+  fps_limit_main: 10                # 🚥 Main loop FPS – controls how fast the main thread runs
   fps_limit_keyboard_controller: 30 # 🚥 Keyboard controller thread FPS
   fps_limit_window_capturor: 15     # 🚥 Window capture thread FPS
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
+  fps_limit_auto_dice_roller: 1     # 🚥 Auto rice roller FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
   show_debug_window: True           # 🐞 Show debug window (disable to save resources)
+  server: "TW"                      # "TW", "NA"
+  language: "chinese"               # "english" "chinese"
