@@ -73,7 +73,6 @@ class MapleStoryBot:
         self.t_patrol_last_attack = time.time() # Last patrol attack timer
         self.t_last_attack = time.time() # Last attack timer for cooldown
         self.t_last_rune_trigger = time.time() # Last time trigger rune
-        self.t_rune_finding_start = None # When we started finding rune (set when rune warning detected)
         # Patrol mode
         self.is_patrol_to_left = True # Patrol direction flag
         self.patrol_turn_point_cnt = 0 # Patrol tuning back counter
@@ -1362,9 +1361,6 @@ class MapleStoryBot:
         # Check whether "Please remove runes" warning appears on screen
         if self.is_rune_warning():
             self.loc_rune = None
-            # Set rune finding start time if not already set
-            if self.t_rune_finding_start is None:
-                self.t_rune_finding_start = time.time()
             self.switch_status("finding_rune") # Stop hunting and start find runes
 
         self.profiler.mark("Rune Warning Detection")
@@ -1496,7 +1492,6 @@ class MapleStoryBot:
                 # If entered the game, start solving rune
                 if self.is_in_rune_game():
                     self.solve_rune() # Blocking until runes solved
-                    self.t_rune_finding_start = None  # Reset rune finding timer
                     self.switch_status("hunting")
 
                 # Restore kb thread
@@ -1714,12 +1709,10 @@ class MapleStoryBot:
                 self.switch_status("hunting")
 
             # Check if finding rune timeout
-            if (self.t_rune_finding_start is not None and 
-                time.time() - self.t_rune_finding_start > self.cfg["rune_find"]["timeout"]):
+            if time.time() - self.t_last_switch_status > self.cfg["rune_find"]["timeout"]:
                 if self.cfg["rune_find"]["timeout_action"] == "change_channel":
                     # Change channel to avoid rune
                     self.channel_change()
-                    self.t_rune_finding_start = None
                 else:
                     # Return home
                     self.kb.press_key(self.cfg["key"]["return_home_key"])
