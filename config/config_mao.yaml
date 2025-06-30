@@ -338,7 +338,7 @@ game_window:
 # Controls performance and behavior of core system threads.
 
 system:
-  fps_limit_main: 10                # 🚥 Main loop FPS – controls how fast the main thread runs
+  fps_limit_main: 15                # 🚥 Main loop FPS – controls how fast the main thread runs
   fps_limit_keyboard_controller: 30 # 🚥 Keyboard controller thread FPS
   fps_limit_window_capturor: 15     # 🚥 Window capture thread FPS
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
