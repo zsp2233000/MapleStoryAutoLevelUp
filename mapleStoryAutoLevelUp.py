@@ -39,6 +39,7 @@ class MapleStoryBot:
         '''
         Init MapleStoryBot
         '''
+        self.command = ''
         self.args = args # User args
         self.status = "hunting" # 'finding_rune', 'near_rune', 'attacking'
         self.idx_routes = 0 # Index of route map
@@ -1307,6 +1308,8 @@ class MapleStoryBot:
         # Start prfiler for performance debugging
         self.profiler.start()
 
+        
+
         # Get game window frame
         self.img_frame = self.get_img_frame()
 
@@ -1317,7 +1320,6 @@ class MapleStoryBot:
         self.img_frame_debug = self.img_frame.copy()
 
         self.profiler.mark("Image Preprocessing")
-        command = ""
 
         # Get minimap coordinate and size on game window
         minimap_result = get_minimap_loc_size(self.img_frame)
@@ -1459,6 +1461,10 @@ class MapleStoryBot:
             if self.loc_rune is not None:
                 self.switch_status("near_rune")
                 logger.info(abs(self.loc_player[0] - self.loc_rune[0]))
+
+        if self.is_in_rune_game():
+            self.solve_rune() # Blocking until runes solved
+            self.switch_status("hunting")
 
         # Check whether we entered the rune mini-game
         if self.status == "near_rune" and (not self.args.disable_control):
@@ -1613,9 +1619,12 @@ class MapleStoryBot:
                            (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
                 
         # 狀態切換邏輯，當有攻擊指令時切換為攻擊狀態
-        if attack_direction is not None and self.status == "hunting" and command not in ["up", "down"]:
+        if attack_direction is not None and self.command not in ("up", "down"):
             self.switch_status("attacking")
-        elif attack_direction is None and self.status == "attacking":
+            # self.t_last_switch_status = time.time()
+            self.command = "stop"  # Stop character before attacking
+        elif attack_direction is None and self.status == "attacking" and \
+            time.time() - self.t_last_switch_status > 1.5:
             self.switch_status("hunting")
 
         if self.args.patrol:
@@ -1640,15 +1649,15 @@ class MapleStoryBot:
                 len(self.monster_info) > 0 and nearest_monster is not None):
                 # Check if monster is actually in attack range
                 if attack_direction == "I don't care" or attack_direction == "left" or attack_direction == "right":
-                    command = "attack"
+                    self.command = "attack"
                     self.t_patrol_last_attack = time.time()
             elif self.is_patrol_to_left:
-                command = "walk left"
+                self.command = "walk left"
             else:
-                command = "walk right"
+                self.command = "walk right"
 
         elif self.args.aux:
-            command = ""
+            self.command = ""
 
         else:
             # get color code from img_route (只在非attacking狀態下執行)
@@ -1659,49 +1668,49 @@ class MapleStoryBot:
                         # Switch to next route map
                         self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
                         logger.debug(f"Change to new route:{self.idx_routes}")
-                    command = color_code["action"]
+                    self.command = color_code["action"]
 
             # teleport away from edge to avoid falling off cliff
             if self.is_near_edge() and \
                 time.time() - self.t_last_teleport > self.cfg["teleport"]["cooldown"]:
-                command = command.replace("walk", "teleport")
+                self.command = self.command.replace("walk", "teleport")
                 self.t_last_teleport = time.time() # update timer
 
         if self.cfg["key"]["teleport"] == "": # disable teleport skill
-            command = command.replace("teleport", "jump")
+            self.command = self.command.replace("teleport", "jump")
 
         # Special logic for each status, overwrite color code action
         if self.status == "hunting":
             # Perform a random action when player stuck (but not if recently saw monsters)
             if not self.args.patrol and self.is_player_stuck():
-                command = self.get_random_action()
-            elif command in ["up", "down", "jump right", "jump left"]:
+                self.command = self.get_random_action()
+            elif self.command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack while character is on rope or jumping
 
         # 在attacking狀態下，只進行攻擊，不進行移動
         elif self.status == "attacking":
             if not self.args.patrol and self.is_player_stuck():
-                command = self.get_random_action()          
-            elif command in ["up", "down", "jump right", "jump left"]:
+                self.command = self.get_random_action()          
+            elif self.command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack while character is on rope or jumping
             elif attack_direction == "I don't care" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                command = "attack"
+                self.command = "attack"
                 self.t_last_attack = time.time()
             elif attack_direction == "left" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                command = "attack left"
+                self.command = "attack left"
                 self.t_last_attack = time.time()
             elif attack_direction == "right" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                command = "attack right"
+                self.command = "attack right"
                 self.t_last_attack = time.time()
             else:
-                command = "stop"  # 沒有可攻擊的怪物時停止動作
+                self.command = "stop"  # 沒有可攻擊的怪物時停止動作
 
         elif self.status == "finding_rune":
             if self.is_player_stuck():
-                command = self.get_random_action()
+                self.command = self.get_random_action()
 
             # If the HP is reduced switch to hurting (other player probably help solved the rune)
             if  time.time() - self.health_monitor.t_last_hp_reduce < 3 and \
@@ -1728,13 +1737,13 @@ class MapleStoryBot:
             logger.error(f"Unknown status: {self.status}")
 
         # send command to keyboard controller
-        self.kb.set_command(command)
+        self.kb.set_command(self.command)
 
         self.profiler.mark("Determine Command")
 
         # Debug: show current command on screen
-        if command and len(command) > 0:
-            cv2.putText(self.img_frame_debug, f"CMD: {command}",
+        if self.command and len(self.command) > 0:
+            cv2.putText(self.img_frame_debug, f"CMD: {self.command}",
                        (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
         
         # Debug: show combat state
