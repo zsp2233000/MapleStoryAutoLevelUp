@@ -19,11 +19,13 @@
 
 key:
   aoe_skill: "r"            # 💥 AoE skill (e.g., Cleric's heal or Mage's lightning)
-  directional_attack: "r"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
+  directional_attack: "a"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
   teleport: ""             # 🌀 Teleport skill. Set to "" if not usable
   jump: "space"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
+  return_home: "8"       # 🔁 Key to use return home scroll.
+  party: "p"                # ⌨️ Party window shortcut
 
 # ────────────────
 # 💫 Buff Skill
@@ -51,9 +53,9 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 240               # ↔️ Horizontal attack range (in pixels)
+  range_x: 120               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
-  cooldown: 0.3             # ⏱️ Time between attacks (in seconds)
+  cooldown: 0.05             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
 
 # ────────────────
@@ -76,11 +78,13 @@ aoe_skill:
 health_monitor:
   enable: True             # ✅ Enable or disable health monitor
   force_heal: False      # 🛡️ Heal first — stop attacking until HP is restored
-  add_hp_ratio: 0        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
-  add_mp_ratio: 0        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
+  add_hp_ratio: 0.2        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
+  add_mp_ratio: 0.1        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
   add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
   fps_limit: 1            # 🚥 Loop rate for the health monitor thread
+  return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
+  return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
 
 # ────────────────
 # 🌀 Mage Teleport
@@ -106,11 +110,27 @@ edge_teleport:
   color_code: [255, 127, 127]  # 🎨 RGB color code to represent platform edge
 
 # ────────────────
+# ❤️ Party Red Bar Detection
+# ────────────────
+# Detects your character's party red on on the game window to estimate player location.
+# This feature will only turn on when nametag.enable == False
+party_red_bar:
+  lower_red: [0, 60, 60]   # ❤️ HSV, darker red of party health bar
+  upper_red: [0, 100, 100] # ❤️ HSV, brighter red of party health bar
+
+  # 🎯 Offset from the top-left corner of the party red bar to the character center
+  offset: [20, 66]  # in pixels
+  create_party_button_thres: 0.1 # 📏 threshold for create party button matching
+
+# ────────────────
 # 🏷️ NameTag Recognition
 # ────────────────
 # Detects your character's nametag on the game window to estimate player location.
+# This method is computational demending and unreliable in some map.
+# Using party red bar to locate player is almost always a better option
 
 nametag:
+  enable: False # Only switch back to 'True' when party red bar detection doesn't work for you
   # 🧪 Comparison mode for matching the nametag:
   #   - "grayscale": match using grayscale image
   #   - "white_mask": match using binarized image
@@ -227,9 +247,9 @@ watchdog:
 # Detects the "Please remove the rune" message on screen.
 # When this warning appears, the bot will pause combat and start searching for the rune instead.
 rune_warning:
-  top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
+  top_left: [650, 196]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.3             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.25             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -250,8 +270,8 @@ rune_find:
                               # If the timeout is reached, the bot will fallback to route_rest.png and rest.
   near_rune_duration: 10       # 🕒 Duration to interact with rune when a positive detection occurs
   rune_trigger_cooldown: 0.3    # 🕒 Cooldown for 'up' key rune trigger
-  rune_trigger_distance: 20
-
+  rune_trigger_distance_x: 20    # only press 'up' when player distance(in pixel) to the rune is close enough.
+  rune_trigger_distance_y: 200
 # ─────────────────────────────
 # 🧩 Rune Mini-Game Solver
 # ─────────────────────────────
@@ -275,7 +295,8 @@ rune_solver:
 
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
-  debug_window_upscale: 3.5         # 🔍 Zoom factor for the route debug image (for visualization only)
+  debug_window_upscale: 4         # 🔍 Zoom factor for the route debug image (for visualization only)
+  offset: [0, 0]                  # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
@@ -301,7 +322,7 @@ patrol:
 route_recoder:
   blob_cooldown: 0.7        # ⏱️ Cooldown in seconds between recording actions like 'jump' or 'teleport'
                             #     These actions are marked as a "blob" on the route map
-  map_padding: 30           # 🖤 Padding (in pixels) added as margin around the edge of the map
+  map_padding: 0           # 🖤 Padding (in pixels) added as margin around the edge of the map
 
 # ─────────────────────────────
 # 🪟 Game Window
@@ -322,5 +343,17 @@ system:
   fps_limit_keyboard_controller: 30 # 🚥 Keyboard controller thread FPS
   fps_limit_window_capturor: 15     # 🚥 Window capture thread FPS
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
+  fps_limit_auto_dice_roller: 1     # 🚥 Auto rice roller FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
-  show_debug_window: True          # 🐞 Show debug window (disable to save resources)
+  show_debug_window: True           # 🐞 Show debug window (disable to save resources)
+  server: "TW"                      # "TW", "NA"
+  language: "chinese"               # "english" "chinese"
+
+# ────────────────
+# ⚙️ Profiler
+# ────────────────
+# For FPS/performance debugging
+# When the FPS is lower than 10, please use profiler to find which code block is costing more time 
+profiler:
+  enable: False # To print the profiler result or not
+  print_frequency: 30 # Print profiler result for every 30 frames

@@ -2,6 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "武陵-熊2-no",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "mu_Lung_wild_bear_area_2",
+                "--monster",
+                "panda,grizzly",
+                "--attack",
+                "directional",
+                "--nametag",
+                "no",
+                "--cfg",
+                "no"
+            ],
+        },
+        {
             "name": "軍1-killua",
             "type": "debugpy",
             "request": "launch",

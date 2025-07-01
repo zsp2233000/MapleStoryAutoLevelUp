@@ -324,7 +324,7 @@ patrol:
 route_recoder:
   blob_cooldown: 0.7        # ⏱️ Cooldown in seconds between recording actions like 'jump' or 'teleport'
                             #     These actions are marked as a "blob" on the route map
-  map_padding: 30           # 🖤 Padding (in pixels) added as margin around the edge of the map
+  map_padding: 0           # 🖤 Padding (in pixels) added as margin around the edge of the map
 
 # ─────────────────────────────
 # 🪟 Game Window
@@ -333,7 +333,7 @@ route_recoder:
 
 game_window:
   title: "MapleStory Worlds-Artale (繁體中文版)"  # 🎮 Game window title (used to detect the correct window)
-  size: [752, 1282]                              # 📐 Game window size [height, width] in pixels
+  size: [759, 1282]                              # 📐 Game window size [height, width] in pixels
 
 # ─────────────────────────────
 # 📩 Email
