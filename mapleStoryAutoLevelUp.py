@@ -39,9 +39,8 @@ class MapleStoryBot:
         '''
         Init MapleStoryBot
         '''
-        self.command = ''
         self.args = args # User args
-        self.status = "hunting" # 'finding_rune', 'near_rune', 'attacking'
+        self.status = "hunting" # 'finding_rune', 'near_rune'
         self.idx_routes = 0 # Index of route map
         self.monster_info = [] # monster information
         self.fps = 0 # Frame per second
@@ -77,10 +76,6 @@ class MapleStoryBot:
         # Patrol mode
         self.is_patrol_to_left = True # Patrol direction flag
         self.patrol_turn_point_cnt = 0 # Patrol tuning back counter
-
-        # Simplified combat management
-        self.t_last_monster_seen = 0  # Last time we saw any monster
-        self.combat_delay = 1.0  # Seconds to wait after last monster before moving
 
         # Load defautl yaml config
         cfg = load_yaml("config/config_default.yaml")
@@ -401,22 +396,6 @@ class MapleStoryBot:
         '''
         get_player_location_on_global_map
         '''
-        
-        map_h, map_w = self.img_map.shape[:2]
-        minimap_h, minimap_w = self.img_minimap.shape[:2]
-
-        # 調整 img_map 大小以匹配 img_minimap
-        if map_h != minimap_h or map_w != minimap_w:
-            self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
-
-        # 檢查小地圖尺寸是否有變化
-        if hasattr(self, 'last_minimap_size'):
-            last_w, last_h = self.last_minimap_size
-            if minimap_w != last_w or minimap_h != last_h:
-                print(f"注意: 小地圖尺寸已變化 {last_w}x{last_h} -> {minimap_w}x{minimap_h}")
-                # 當小地圖尺寸變化時，重新調整 img_map
-                self.img_map = cv2.resize(self.img_map, (minimap_w, minimap_h), interpolation=cv2.INTER_AREA)
-
         self.loc_minimap_global, score, _ = find_pattern_sqdiff(
                                         self.img_map,
                                         self.img_minimap)
@@ -945,7 +924,7 @@ class MapleStoryBot:
         _, score, _ = find_pattern_sqdiff(
                         self.img_frame_gray[y0:y1, x0:x1],
                         self.img_rune_warning)
-        if self.status in ("hunting", "attacking") and score < self.cfg["rune_warning"]["diff_thres"]:
+        if self.status == "hunting" and score < self.cfg["rune_warning"]["diff_thres"]:
             logger.info(f"[is_rune_warning] Detect rune warning on screen with score({score})")
             return True
         else:
@@ -1150,10 +1129,9 @@ class MapleStoryBot:
         '''
         get_random_action - pick a random action except 'up' and teleport command
         '''
-        available_actions = ["walk left","walk right", "jump left", "jump right", "down"]
-
-        action = random.choice(available_actions)
-        
+        # Exclude the 'up' action
+        actions = [v for k, v in self.color_code.items() if v != 'up' and ('teleport' not in v)]
+        action = random.choice(actions)
         logger.warning(f"Perform random action: {action}")
         return action
 
@@ -1307,8 +1285,6 @@ class MapleStoryBot:
         '''
         # Start prfiler for performance debugging
         self.profiler.start()
-
-        
 
         # Get game window frame
         self.img_frame = self.get_img_frame()
@@ -1524,17 +1500,10 @@ class MapleStoryBot:
         y1 = min(self.img_frame.shape[0], self.loc_player[1] + dy)
 
         # Get monsters in the search box
-        if self.status in ["hunting", "attacking"]:
+        if self.status == "hunting":
             self.monster_info = self.get_monsters_in_range((x0, y0), (x1, y1))
         else:
             self.monster_info = []
-
-        # Simple combat state: if we see monsters, update the timer
-        if len(self.monster_info) > 0:
-            self.t_last_monster_seen = time.time()
-
-        # Check if we should stay in place (recently saw monsters)
-        should_stay_for_combat = (time.time() - self.t_last_monster_seen) < self.combat_delay
 
         self.profiler.mark("Monster Detection")
 
@@ -1617,16 +1586,8 @@ class MapleStoryBot:
                 debug_text = f"L:{distance_left:.0f}({left_side_ok}) R:{distance_right:.0f}({right_side_ok}) Dir:{attack_direction}"
                 cv2.putText(self.img_frame_debug, debug_text,
                            (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
-                
-        # 狀態切換邏輯，當有攻擊指令時切換為攻擊狀態
-        if attack_direction is not None and self.command not in ("up", "down"):
-            self.switch_status("attacking")
-            # self.t_last_switch_status = time.time()
-            self.command = "stop"  # Stop character before attacking
-        elif attack_direction is None and self.status == "attacking" and \
-            time.time() - self.t_last_switch_status > 1.5:
-            self.switch_status("hunting")
 
+        command = ""
         if self.args.patrol:
             x, y = self.loc_player
             h, w = self.img_frame.shape[:2]
@@ -1649,68 +1610,58 @@ class MapleStoryBot:
                 len(self.monster_info) > 0 and nearest_monster is not None):
                 # Check if monster is actually in attack range
                 if attack_direction == "I don't care" or attack_direction == "left" or attack_direction == "right":
-                    self.command = "attack"
+                    command = "attack"
                     self.t_patrol_last_attack = time.time()
             elif self.is_patrol_to_left:
-                self.command = "walk left"
+                command = "walk left"
             else:
-                self.command = "walk right"
+                command = "walk right"
 
         elif self.args.aux:
-            self.command = ""
+            command = ""
 
         else:
-            # get color code from img_route (只在非attacking狀態下執行)
-            if self.status != "attacking":
-                color_code = self.get_nearest_color_code()
-                if color_code:
-                    if color_code["action"] == "goal":
-                        # Switch to next route map
-                        self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
-                        logger.debug(f"Change to new route:{self.idx_routes}")
-                    self.command = color_code["action"]
+            # get color code from img_route
+            color_code = self.get_nearest_color_code()
+            if color_code:
+                if color_code["action"] == "goal":
+                    # Switch to next route map
+                    self.idx_routes = (self.idx_routes+1)%len(self.img_routes)
+                    logger.debug(f"Change to new route:{self.idx_routes}")
+                command = color_code["action"]
 
             # teleport away from edge to avoid falling off cliff
             if self.is_near_edge() and \
                 time.time() - self.t_last_teleport > self.cfg["teleport"]["cooldown"]:
-                self.command = self.command.replace("walk", "teleport")
+                command = command.replace("walk", "teleport")
                 self.t_last_teleport = time.time() # update timer
 
         if self.cfg["key"]["teleport"] == "": # disable teleport skill
-            self.command = self.command.replace("teleport", "jump")
+            command = command.replace("teleport", "jump")
 
         # Special logic for each status, overwrite color code action
         if self.status == "hunting":
-            # Perform a random action when player stuck (but not if recently saw monsters)
+            # Perform a random action when player stuck
             if not self.args.patrol and self.is_player_stuck():
-                self.command = self.get_random_action()
-            elif self.command in ["up", "down", "jump right", "jump left"]:
-                pass # Don't attack while character is on rope or jumping
-
-        # 在attacking狀態下，只進行攻擊，不進行移動
-        elif self.status == "attacking":
-            if not self.args.patrol and self.is_player_stuck():
-                self.command = self.get_random_action()          
-            elif self.command in ["up", "down", "jump right", "jump left"]:
+                command = self.get_random_action()
+            elif command in ["up", "down", "jump right", "jump left"]:
                 pass # Don't attack while character is on rope or jumping
             elif attack_direction == "I don't care" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                self.command = "attack"
+                command = "attack"
                 self.t_last_attack = time.time()
             elif attack_direction == "left" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                self.command = "attack left"
+                command = "attack left"
                 self.t_last_attack = time.time()
             elif attack_direction == "right" and nearest_monster is not None and \
                 time.time() - self.t_last_attack > self.cfg["directional_attack"]["cooldown"]:
-                self.command = "attack right"
+                command = "attack right"
                 self.t_last_attack = time.time()
-            else:
-                self.command = "stop"  # 沒有可攻擊的怪物時停止動作
 
         elif self.status == "finding_rune":
             if self.is_player_stuck():
-                self.command = self.get_random_action()
+                command = self.get_random_action()
 
             # If the HP is reduced switch to hurting (other player probably help solved the rune)
             if  time.time() - self.health_monitor.t_last_hp_reduce < 3 and \
@@ -1737,20 +1688,14 @@ class MapleStoryBot:
             logger.error(f"Unknown status: {self.status}")
 
         # send command to keyboard controller
-        self.kb.set_command(self.command)
+        self.kb.set_command(command)
 
         self.profiler.mark("Determine Command")
 
         # Debug: show current command on screen
-        if self.command and len(self.command) > 0:
-            cv2.putText(self.img_frame_debug, f"CMD: {self.command}",
+        if command and len(command) > 0:
+            cv2.putText(self.img_frame_debug, f"CMD: {command}",
                        (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
-        
-        # Debug: show combat state
-        if should_stay_for_combat:
-            time_since_monster = time.time() - self.t_last_monster_seen
-            cv2.putText(self.img_frame_debug, f"COMBAT WAIT: {time_since_monster:.1f}s",
-                       (10, 510), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
         # Check if need to save screenshot
         if self.kb.is_need_screen_shot:
@@ -1875,7 +1820,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--cfg',
         type=str,
-        default='no',
+        default='edit_me',
         help='Choose customized config yaml file in config/'
     )
 

@@ -187,7 +187,7 @@ monster_detect:
   #   - "template_free" (lightest and fastest, but likely to have many wrong detection)
   # 💡 Feel free to test different modes to find what works best for your setup.
   mode: "contour_only"         # 🧠 Options: "color", "grayscale", "contour_only", "template_free"
-  diff_thres: 0.8              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
+  diff_thres: 0.8              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Lower = stricter match
   search_box_margin: 50        # ➕ Additional margin(in pixels) around the attack box for monster searching
   contour_blur: 5              # 🌫️ Gaussian blur kernel size used for contour smoothing (in "contour_only" mode).
   with_enemy_hp_bar: True      # ❤️ Enable smarter detection using enemy HP bars.
@@ -199,9 +199,22 @@ monster_detect:
 # "": Off
 # "true": Change channel once other player is detected
 # "pixel": Change channel once other player move set pixels in other_player_move_pixel
-auto_change_channel: ""
-other_player_move_pixel: 10  # only work when auto_change_channel == "pixel" 
+channel_change:
+  mode: "pixel"
+  other_player_move_thres: 10  # only work when mode == "pixel"
 
+# ────────────────
+# 🧭 UI Coordinate
+# ────────────────
+ui_coords:
+  "menu": [1140, 730]
+  "channel": [1140, 666]
+  "random_channel": [877, 161]
+  "random_channel_confirm": [585, 420]
+  "select_character": [888, 275]
+  login_button_thres: 0.05 #
+  login_button_top_left: [838, 376] # top left corner of login button search ragne
+  login_button_bottom_right: [940, 432] # bottom right corner of login button search ragne
 
 # ────────────────
 # 🧭 Route Following
@@ -215,21 +228,24 @@ route:
   jump_down_cooldown: 3.0     # ⏱️ Cooldown (in seconds) for 'jump down' action to prevent continuous descent
 
   # 🎨 Color-coded(RGB) actions for route navigation
+  # "<left-right command, up-down command, action>"
   color_code:
-    "255,0,0": "walk left"         # 🔴 Red
-    "0,0,255": "walk right"        # 🔵 Blue
-    "255,127,0": "jump left"       # 🟠 Orange
-    "0,255,255": "jump right"      # 🟦 Cyan
-    "127,255,0": "jump down"       # 💚 Lime
-    "255,0,255": "jump"            # 💜 Magenta
-    "127,127,127": "up"            # ⚪ Gray
-    "255,255,127": "down"          # 🟡 Light yellow
-    "0,255,127": "stop"            # 🟢 Light green
-    "255,255,0": "goal"            # 🟨 Yellow
-    "255,0,127": "teleport up"     # 🌸 Pink
-    "127,0,255": "teleport down"   # 🟪 Purple
-    "0,127,0": "teleport left"     # 🟩 Dark green
-    "139,69,19": "teleport right"  # 🟫 Brown
+    "255,0,0": "left none none"         # 🔴 Red
+    "0,0,255": "right none none"        # 🔵 Blue
+    "255,127,0": "left none jump"       # 🟠 Orange
+    "0,255,255": "right none jump"      # 🟦 Cyan
+    "127,255,0": "none down jump"       # 💚 Lime
+    "255,0,255": "none none jump"       # 💜 Magenta
+    "0,255,127": "stop stop stop"       # 🟢 Light green
+    "255,255,0": "none none goal"       # 🟨 Yellow
+    "255,0,127": "none up teleport"     # 🌸 Pink
+    "127,0,255": "none down teleport"   # 🟪 Purple
+    "0,127,0": "left none teleport"     # 🟩 Dark green
+    "139,69,19": "right none teleport"  # 🟫 Brown
+
+  color_code_up_down:
+    "127,127,127": "none up none"       # ⚪ Gray
+    "255,255,127": "none down none"     # 🟡 Light yellow
 
 # ────────────────────────────────
 # 🐶 Watchdog (Anti-Stuck System)
@@ -330,10 +346,10 @@ route_recoder:
 # 🪟 Game Window
 # ─────────────────────────────
 # Basic information about the game window setup
-
 game_window:
   title: "MapleStory Worlds-Artale (繁體中文版)"  # 🎮 Game window title (used to detect the correct window)
-  size: [759, 1282]                              # 📐 Game window size [height, width] in pixels
+  size: [752, 1282]           # 📐 Game window size [height, width] in pixels
+  ratio_tolerance: 0.08        # 📐 Game window 16:9 tolerance
 
 # ─────────────────────────────
 # 📩 Email

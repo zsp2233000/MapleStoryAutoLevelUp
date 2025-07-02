@@ -19,6 +19,13 @@ import yaml
 import pyautogui
 import pygetwindow as gw
 
+# macOS specific import
+if platform.system() == 'Darwin':
+    import Quartz
+else:
+    import win32gui
+    import win32con
+
 # Local import
 from logger import logger
 
@@ -156,7 +163,11 @@ def screenshot(img, suffix="screenshot"):
     - Saves the image to the "screenshot/" directory with the current timestamp as filename.
     '''
 
-    os.makedirs("screenshot", exist_ok=True)  # ensure directory exists
+    if img is None:
+        return
+
+    # ensure directory exists
+    os.makedirs("screenshot", exist_ok=True)
 
     # Generate timestamp string
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -389,13 +400,77 @@ def get_player_location_on_minimap(img_minimap, minimap_player_color=(136, 255, 
     return loc_player_minimap
 
 def get_all_other_player_locations_on_minimap(img_minimap, red_bgr=(0, 0, 255)):
+    '''
+    Detect red dot (0,0,255) and calculate the center to define as other player position.
+    '''
     red_bgr = tuple(map(int, red_bgr))
-    mask = cv2.inRange(img_minimap, red_bgr, red_bgr)
-    coords = cv2.findNonZero(mask)
-    if coords is None or len(coords) < 3:
-        return []
-    return [tuple(pt[0]) for pt in coords]  # List of (x, y)
+    # 智能選擇容錯範圍：從較小開始，如果檢測不到就增加
+    tolerances = [10, 20, 30, 40]  # 嘗試不同的容錯範圍
     
+    for tolerance in tolerances:
+        lower_bgr = tuple(max(0, c - tolerance) for c in red_bgr)
+        upper_bgr = tuple(min(255, c + tolerance) for c in red_bgr)
+
+        # 使用範圍檢測
+        mask = cv2.inRange(img_minimap, lower_bgr, upper_bgr)
+        coords = cv2.findNonZero(mask)
+
+        if coords is not None and len(coords) >= 3:
+            logger.debug(f"Found {len(coords)} red pixels with tolerance {tolerance}")
+            logger.debug(f"Color range: {lower_bgr} to {upper_bgr}")
+            return [tuple(pt[0]) for pt in coords]  # List of (x, y)
+
+    # 如果所有容錯範圍都檢測不到，記錄調試信息
+    logger.debug(f"Red dot detection failed with all tolerances: {tolerances}")
+    return []
+
+def debug_minimap_colors(img_minimap, target_color=(0, 0, 255)):
+    """
+    調試函數：分析小地圖中的顏色分布，幫助找到正確的紅色點顏色值
+    """
+    # 保存原始小地圖
+    cv2.imwrite("debug_minimap_original.png", img_minimap)
+    
+    # 分析顏色分布
+    h, w = img_minimap.shape[:2]
+    colors_found = {}
+    
+    # 掃描整個小地圖，統計顏色
+    for y in range(0, h, 2):  # 每2個像素取一個樣本以提高效率
+        for x in range(0, w, 2):
+            color = tuple(img_minimap[y, x])
+            if color not in colors_found:
+                colors_found[color] = 0
+            colors_found[color] += 1
+    
+    # 找出最常見的顏色（排除黑色和白色）
+    sorted_colors = sorted(colors_found.items(), key=lambda x: x[1], reverse=True)
+    
+    logger.info("=== Minimap Color Analysis ===")
+    logger.info(f"Target color (BGR): {target_color}")
+    logger.info("Top 10 most common colors:")
+    
+    for i, (color, count) in enumerate(sorted_colors[:10]):
+        if color != (0, 0, 0) and color != (255, 255, 255):  # 排除純黑和純白
+            logger.info(f"  {i+1}. BGR{color}: {count} pixels")
+            
+            # 檢查是否接近目標顏色
+            diff = sum(abs(c1 - c2) for c1, c2 in zip(color, target_color))
+            if diff < 50:  # 如果顏色差異小於50
+                logger.info(f"    *** Close to target color! Difference: {diff} ***")
+    
+    # 創建不同容錯範圍的檢測結果
+    for tolerance in [10, 20, 30, 40, 50]:
+        lower_bgr = tuple(max(0, c - tolerance) for c in target_color)
+        upper_bgr = tuple(min(255, c + tolerance) for c in target_color)
+        mask = cv2.inRange(img_minimap, lower_bgr, upper_bgr)
+        coords = cv2.findNonZero(mask)
+        count = len(coords) if coords is not None else 0
+        logger.info(f"Tolerance {tolerance}: Found {count} pixels")
+        cv2.imwrite(f"debug_red_detection_tolerance_{tolerance}.png", mask)
+    
+    return sorted_colors
+
 def get_bar_ratio(img):
     '''
     Get HP/MP/EXP bar ratio with given bar image
@@ -473,13 +548,61 @@ def nms_matches(matches, iou_thresh=0.0):
 
     return filtered
 
+def get_window_region_mac(window_title):
+    '''
+    Get window region on macOS using Quartz
+    '''
+    window_list = Quartz.CGWindowListCopyWindowInfo(
+        Quartz.kCGWindowListOptionOnScreenOnly | Quartz.kCGWindowListExcludeDesktopElements,
+        Quartz.kCGNullWindowID
+    )
+    # Get all exist windows
+    all_titles = []
+    for window in window_list:
+        title = window.get(Quartz.kCGWindowName, '')
+        owner = window.get(Quartz.kCGWindowOwnerName, '')
+        if title:
+            all_titles.append(f"{title} (Owner: {owner})")
+    logger.debug(f"all_titles: {all_titles}")
+    for window in window_list:
+        if window.get(Quartz.kCGWindowName, '') == window_title:
+            bounds = window.get(Quartz.kCGWindowBounds, {})
+            return {
+                "left": int(bounds.get('X', 0)),
+                "top": int(bounds.get('Y', 0)),
+                "width": int(bounds.get('Width', 0)),
+                "height": int(bounds.get('Height', 0))
+            }
+    return None
+
+
 def click_in_game_window(window_title, coord):
     '''
     Mouse click on a game window coordinate
     '''
-    game_window = gw.getWindowsWithTitle(window_title)[0]
-    win_left, win_top = game_window.left, game_window.top
-    pyautogui.click(win_left + coord[0], win_top + coord[1])
+    # game_window = gw.getWindowsWithTitle(window_title)[0]
+    # win_left, win_top = game_window.left, game_window.top
+
+    # If mac then coord / 2 and y position + 3
+    if is_mac():
+        coord = (coord[0] // 2, coord[1] // 2 + 10)
+
+    if is_mac():
+        # macOS implementation using Quartz
+        region = get_window_region_mac(window_title)
+        if region is None:
+            text = f"Cannot find window: {window_title}"
+            logger.error(text)
+            raise RuntimeError(text)
+        win_left, win_top = region["left"], region["top"]
+    else:
+        # Windows implementation using pygetwindow
+        game_window = gw.getWindowsWithTitle(window_title)[0]
+        win_left, win_top = game_window.left, game_window.top
+
+    loc_click = (win_left + coord[0], win_top + coord[1])
+    pyautogui.click(loc_click)
+    logger.info(f"[click_in_game_window] click at {loc_click}")
 
 def send_email(email_addr, password,
                to, subject, body, attachment_path):
@@ -542,7 +665,8 @@ def mask_route_colors(img_map, img_route, color_code):
 
     # Ensure dimensions match
     if img_map.shape[:2] != img_route.shape[:2]:
-        logger.warning(f"[mask_route_colors] Resizing img_map from {img_map.shape} to {img_route.shape}")
+        logger.warning("[mask_route_colors] Resizing img_map from "
+                       f"{img_map.shape} to {img_route.shape}")
         img_map = cv2.resize(img_map, (img_route.shape[1], img_route.shape[0]))
 
     # Build mask for each color
@@ -555,3 +679,25 @@ def mask_route_colors(img_map, img_route, color_code):
     img_route[mask] = (0, 0, 0)
 
     return img_route
+
+def activate_game_window(window_title):
+    '''
+    activate_game_window
+    This function only support Windows OS
+    '''
+    hwnd = win32gui.FindWindow(None, window_title)
+    if hwnd == 0:
+        raise Exception(f"Cannot find window with title: {window_title}")
+
+    # Restore if minimized
+    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+    # Bring to foreground
+    win32gui.SetForegroundWindow(hwnd)
+
+def is_img_16_to_9(img, cfg):
+    """
+    Check if image aspect ratio is approximately 16:9.
+    """
+    tolerance = cfg["game_window"]["ratio_tolerance"]
+    h, w = img.shape[:2]
+    return abs(w/h - 16/9) <= tolerance
