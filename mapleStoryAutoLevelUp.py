@@ -182,7 +182,7 @@ class MapleStoryBot:
 
         # Start game window capturing thread
         logger.info("Waiting for game window to activate, please click on game window")
-        self.capture = GameWindowCapturor(self.cfg)
+        self.capture = GameWindowCapturor(self.cfg,args)
 
         # Start health monitoring thread
         self.health_monitor = HealthMonitor(self.cfg, args, self.kb)
@@ -1587,7 +1587,7 @@ class MapleStoryBot:
                 cv2.putText(self.img_frame_debug, debug_text,
                            (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
-        command = ""
+        command = "none none none"
         if self.args.patrol:
             x, y = self.loc_player
             h, w = self.img_frame.shape[:2]
