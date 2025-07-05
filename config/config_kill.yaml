@@ -22,7 +22,7 @@ key:
   directional_attack: "s"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
   teleport: "space"             # 🌀 Teleport skill. Set to "" if not usable
   jump: "v"             # 🦘 Jump key
-  add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
+  add_hp: "s"               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
   return_home: "8"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
@@ -41,8 +41,8 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["3"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [300]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  keys: ["3","5"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  cooldown: [300,80]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -65,7 +65,7 @@ directional_attack:
 # Examples: Cleric’s Heal, Mage’s Lightning Bolt
 
 aoe_skill:
-  range_x: 180               # ↔️ Horizontal skill range (in pixels)
+  range_x: 340               # ↔️ Horizontal skill range (in pixels)
   range_y: 70               # ↕️ Vertical skill range (in pixels)
 
 # ────────────────
@@ -247,9 +247,9 @@ watchdog:
 # Detects the "Please remove the rune" message on screen.
 # When this warning appears, the bot will pause combat and start searching for the rune instead.
 rune_warning:
-  top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
+  top_left: [660, 186]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.3             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.3            # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box

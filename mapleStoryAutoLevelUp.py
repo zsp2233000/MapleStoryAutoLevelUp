@@ -1832,7 +1832,7 @@ class MapleStoryBot:
 
             # Check if finding rune timeout
             diff_timeout = time.time() - self.t_rune_finding_start
-            logger.info(f"diff_timeout: {diff_timeout}")
+            # logger.info(f"diff_timeout: {diff_timeout}")
             if diff_timeout > self.cfg["rune_find"]["timeout"]:
                 if self.cfg["rune_find"]["timeout_action"] == "change_channel":
                     # Change channel to avoid rune
