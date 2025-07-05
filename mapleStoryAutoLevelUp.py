@@ -11,6 +11,7 @@ import sys
 import logging
 import os
 import datetime
+import multiprocessing
 
 # Library import
 import numpy as np
@@ -643,7 +644,7 @@ class MapleStoryBot:
 
     def get_monsters_in_range(self, top_left, bottom_right):
         '''
-        get_monsters_in_range
+        get_monsters_in_range (with multiprocessing for template matching)
         '''
         x0, y0 = top_left
         x1, y1 = bottom_right
@@ -661,113 +662,128 @@ class MapleStoryBot:
         char_y_min = max(0, py_in_roi - self.cfg["character"]["height"] // 2)
         char_y_max = min(img_roi.shape[0], py_in_roi + self.cfg["character"]["height"] // 2)
 
-        monster_info = []
+        def match_monster(args):
+            monster_name, img_monster, mask_monster = args
+            result = []
+            if self.args.patrol:
+                return result
+            elif self.cfg["monster_detect"]["mode"] == "template_free":
+                # Generate mask where pixel is exactly (0,0,0)
+                black_mask = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
+                cv2.imshow("Black Pixel Mask", black_mask)
+
+                # Zero out mask inside this region (ignore player's own character)
+                black_mask[char_y_min:char_y_max, char_x_min:char_x_max] = 0
+
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20, 20))
+                closed_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel)
+                # cv2.imshow("Black Mask", closed_mask)
+
+                # draw player character bounding box
+                draw_rectangle(
+                    self.img_frame_debug, (char_x_min+x0, char_y_min+y0),
+                    (self.cfg["character"]["height"], self.cfg["character"]["width"]),
+                    (255, 0, 0), "Character Box"
+                )
+
+                num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(closed_mask, connectivity=8)
+
+                for i in range(1, num_labels):
+                    x, y, w, h, area = stats[i]
+                    if area > 1000:
+                        result.append({
+                            "name": "",
+                            "position": (x0+x, y0+y),
+                            "size": (h, w),
+                            "score": 1.0,
+                        })
+                return result
+            elif self.cfg["monster_detect"]["mode"] == "contour_only":
+                # Use only black lines contour to detect monsters
+                # Create masks (already grayscale)
+                mask_pattern = np.all(img_monster == [0, 0, 0], axis=2).astype(np.uint8) * 255
+                mask_roi = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
+
+                # Zero out mask inside this region (ignore player's own character)
+                mask_roi[char_y_min:char_y_max, char_x_min:char_x_max] = 0
+
+                # Apply Gaussian blur (soften the masks)
+                blur = self.cfg["monster_detect"]["contour_blur"]
+                img_monster_blur = cv2.GaussianBlur(mask_pattern, (blur, blur), 0)
+                img_roi_blur = cv2.GaussianBlur(mask_roi, (blur, blur), 0)
+
+                # Check template vs ROI size before matching
+                h_roi, w_roi = img_roi_blur.shape[:2]
+                h_temp, w_temp = img_monster_blur.shape[:2]
+
+                if h_temp > h_roi or w_temp > w_roi:
+                    return []  # template bigger than roi, skip this matching
+
+                # Perform template matching
+                res = cv2.matchTemplate(img_roi_blur, img_monster_blur, cv2.TM_SQDIFF_NORMED)
+
+                # Apply soft threshold
+                match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
+
+                h, w = img_monster.shape[:2]
+                for pt in zip(*match_locations[::-1]):
+                    result.append({
+                        "name": monster_name,
+                        "position": (pt[0] + x0, pt[1] + y0),
+                        "size": (h, w),
+                        "score": res[pt[1], pt[0]],
+                    })
+                return result
+            elif self.cfg["monster_detect"]["mode"] == "grayscale":
+                img_monster_gray = cv2.cvtColor(img_monster, cv2.COLOR_BGR2GRAY)
+                img_roi_gray = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
+                res = cv2.matchTemplate(
+                        img_roi_gray,
+                        img_monster_gray,
+                        cv2.TM_SQDIFF_NORMED,
+                        mask=mask_monster)
+                match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
+                h, w = img_monster.shape[:2]
+                for pt in zip(*match_locations[::-1]):
+                    result.append({
+                        "name": monster_name,
+                        "position": (pt[0] + x0, pt[1] + y0),
+                        "size": (h, w),
+                        "score": res[pt[1], pt[0]],
+                    })
+                return result
+            elif self.cfg["monster_detect"]["mode"] == "color":
+                res = cv2.matchTemplate(
+                        img_roi,
+                        img_monster,
+                        cv2.TM_SQDIFF_NORMED,
+                        mask=mask_monster)
+                match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
+                h, w = img_monster.shape[:2]
+                for pt in zip(*match_locations[::-1]):
+                    result.append({
+                        "name": monster_name,
+                        "position": (pt[0] + x0, pt[1] + y0),
+                        "size": (h, w),
+                        "score": res[pt[1], pt[0]],
+                })
+                return result
+            else:
+                return result
+
+        # 準備 multiprocessing pool
+        monster_args = []
         for monster_name, monster_imgs in self.monsters.items():
             for img_monster, mask_monster in monster_imgs:
-                if self.args.patrol:
-                    pass # Don't detect monster using template in patrol mode
-                elif self.cfg["monster_detect"]["mode"] == "template_free":
-                    # Generate mask where pixel is exactly (0,0,0)
-                    black_mask = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
-                    cv2.imshow("Black Pixel Mask", black_mask)
+                monster_args.append((monster_name, img_monster, mask_monster))
 
-                    # Zero out mask inside this region (ignore player's own character)
-                    black_mask[char_y_min:char_y_max, char_x_min:char_x_max] = 0
+        with multiprocessing.Pool(processes=min(4, multiprocessing.cpu_count())) as pool:
+            results = pool.map(match_monster, monster_args)
 
-                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20, 20))
-                    closed_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel)
-                    # cv2.imshow("Black Mask", closed_mask)
-
-                    # draw player character bounding box
-                    draw_rectangle(
-                        self.img_frame_debug, (char_x_min+x0, char_y_min+y0),
-                        (self.cfg["character"]["height"], self.cfg["character"]["width"]),
-                        (255, 0, 0), "Character Box"
-                    )
-
-                    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(closed_mask, connectivity=8)
-
-                    monster_info = []
-                    min_area = 1000
-                    for i in range(1, num_labels):
-                        x, y, w, h, area = stats[i]
-                        if area > min_area:
-                            monster_info.append({
-                                "name": "",
-                                "position": (x0+x, y0+y),
-                                "size": (h, w),
-                                "score": 1.0,
-                            })
-                elif self.cfg["monster_detect"]["mode"] == "contour_only":
-                    # Use only black lines contour to detect monsters
-                    # Create masks (already grayscale)
-                    mask_pattern = np.all(img_monster == [0, 0, 0], axis=2).astype(np.uint8) * 255
-                    mask_roi = np.all(img_roi == [0, 0, 0], axis=2).astype(np.uint8) * 255
-
-                    # Zero out mask inside this region (ignore player's own character)
-                    mask_roi[char_y_min:char_y_max, char_x_min:char_x_max] = 0
-
-                    # Apply Gaussian blur (soften the masks)
-                    blur = self.cfg["monster_detect"]["contour_blur"]
-                    img_monster_blur = cv2.GaussianBlur(mask_pattern, (blur, blur), 0)
-                    img_roi_blur = cv2.GaussianBlur(mask_roi, (blur, blur), 0)
-
-                    # Check template vs ROI size before matching
-                    h_roi, w_roi = img_roi_blur.shape[:2]
-                    h_temp, w_temp = img_monster_blur.shape[:2]
-
-                    if h_temp > h_roi or w_temp > w_roi:
-                        return []  # template bigger than roi, skip this matching
-
-                    # Perform template matching
-                    res = cv2.matchTemplate(img_roi_blur, img_monster_blur, cv2.TM_SQDIFF_NORMED)
-
-                    # Apply soft threshold
-                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
-
-                    h, w = img_monster.shape[:2]
-                    for pt in zip(*match_locations[::-1]):
-                        monster_info.append({
-                            "name": monster_name,
-                            "position": (pt[0] + x0, pt[1] + y0),
-                            "size": (h, w),
-                            "score": res[pt[1], pt[0]],
-                        })
-                elif self.cfg["monster_detect"]["mode"] == "grayscale":
-                    img_monster_gray = cv2.cvtColor(img_monster, cv2.COLOR_BGR2GRAY)
-                    img_roi_gray = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
-                    res = cv2.matchTemplate(
-                            img_roi_gray,
-                            img_monster_gray,
-                            cv2.TM_SQDIFF_NORMED,
-                            mask=mask_monster)
-                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
-                    h, w = img_monster.shape[:2]
-                    for pt in zip(*match_locations[::-1]):
-                        monster_info.append({
-                            "name": monster_name,
-                            "position": (pt[0] + x0, pt[1] + y0),
-                            "size": (h, w),
-                            "score": res[pt[1], pt[0]],
-                    })
-                elif self.cfg["monster_detect"]["mode"] == "color":
-                    res = cv2.matchTemplate(
-                            img_roi,
-                            img_monster,
-                            cv2.TM_SQDIFF_NORMED,
-                            mask=mask_monster)
-                    match_locations = np.where(res <= self.cfg["monster_detect"]["diff_thres"])
-                    h, w = img_monster.shape[:2]
-                    for pt in zip(*match_locations[::-1]):
-                        monster_info.append({
-                            "name": monster_name,
-                            "position": (pt[0] + x0, pt[1] + y0),
-                            "size": (h, w),
-                            "score": res[pt[1], pt[0]],
-                    })
-                else:
-                    logger.error(f"Unexpected camera localization mode: {self.cfg['monster_detect']['mode']}")
-                    return []
+        # 彙整所有結果
+        monster_info = []
+        for r in results:
+            monster_info.extend(r)
 
         # Apply Non-Maximum Suppression to monster detection
         monster_info = nms(monster_info, iou_threshold=0.4)
