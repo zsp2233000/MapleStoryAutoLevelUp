@@ -102,6 +102,19 @@
             ]
         },
         {
+            "name": "buff-owen",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--aux",
+                "--nametag",
+                "owen",
+                "--cfg",
+                "owen"
+            ]
+        },
+        {
             "name": "黑肥肥領土1-mao",
             "type": "debugpy",
             "request": "launch",

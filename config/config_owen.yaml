@@ -41,8 +41,8 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["1","5"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [290,600]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  keys: ["1","0","2"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  cooldown: [290,600,30]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -231,7 +231,7 @@ watchdog:
 # Detects the "Please remove the rune" message on screen.
 # When this warning appears, the bot will pause combat and start searching for the rune instead.
 rune_warning:
-  top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
+  top_left: [660, 186]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
   diff_thres: 0.33             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
@@ -282,6 +282,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
+  offset: [-30, -30]                  # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
@@ -330,7 +331,7 @@ system:
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
   fps_limit_auto_dice_roller: 1     # 🚥 Auto rice roller FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
-  show_debug_window: True           # 🐞 Show debug window (disable to save resources)
+  show_debug_window: False           # 🐞 Show debug window (disable to save resources)
   server: "TW"                      # "TW", "NA"
   language: "chinese"               # "english" "chinese"
 
