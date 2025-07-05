@@ -982,12 +982,14 @@ class MapleStoryBot:
         x1, y1 = self.cfg["rune_warning"]["bottom_right"]
 
         # Debug
-        # draw_rectangle(
-        #     self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
-        #     (0, 0, 255), "")
         _, score, _ = find_pattern_sqdiff(
                         self.img_frame_gray[y0:y1, x0:x1],
                         self.img_rune_warning)
+        draw_rectangle(
+            self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
+            (0, 0, 255), f"score: {score:.2f}"
+        )
+        
         if self.status == "hunting" and score < self.cfg["rune_warning"]["diff_thres"]:
             logger.info(f"[is_rune_warning] Detect rune warning on screen with score({score})")
             return True
@@ -1193,8 +1195,8 @@ class MapleStoryBot:
         '''
         get_random_action - pick a random action except 'up' and teleport command
         '''
-        cmd_left_right = random.choice(["left", "right", "none"])
-        cmd_up_down = random.choice(["down", "none"])
+        cmd_left_right = random.choice(["left", "right"])
+        cmd_up_down = "none"
         cmd_action = random.choice(["jump", "none"])
         logger.warning(f"Perform random command: {cmd_left_right} {cmd_up_down} {cmd_action}")
         return cmd_left_right, cmd_up_down, cmd_action
@@ -1832,7 +1834,7 @@ class MapleStoryBot:
 
             # Check if finding rune timeout
             diff_timeout = time.time() - self.t_rune_finding_start
-            logger.info(f"diff_timeout: {diff_timeout}")
+            # logger.info(f"diff_timeout: {diff_timeout}")
             if diff_timeout > self.cfg["rune_find"]["timeout"]:
                 if self.cfg["rune_find"]["timeout_action"] == "change_channel":
                     # Change channel to avoid rune
