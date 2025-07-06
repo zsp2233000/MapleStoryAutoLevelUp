@@ -19,7 +19,7 @@
 
 key:
   aoe_skill: "r"            # 💥 AoE skill (e.g., Cleric's heal or Mage's lightning)
-  directional_attack: "a"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
+  directional_attack: "r"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
   teleport: ""             # 🌀 Teleport skill. Set to "" if not usable
   jump: "space"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
@@ -53,7 +53,7 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 120               # ↔️ Horizontal attack range (in pixels)
+  range_x: 240               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.05             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
@@ -296,7 +296,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 4         # 🔍 Zoom factor for the route debug image (for visualization only)
-  offset: [0, 0]                  # 📐 Don't set this unless playing on N.A server
+  offset: [-30, -30]                  # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode

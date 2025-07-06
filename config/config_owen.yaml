@@ -41,8 +41,8 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["1","0","2"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [290,600,30]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  keys: ["1","0","4","5",]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  cooldown: [290,600,600,55]              # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -53,7 +53,7 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 180               # ↔️ Horizontal attack range (in pixels)
+  range_x: 150               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.3             # ⏱️ Time between attacks (in seconds)
   character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
@@ -80,9 +80,9 @@ health_monitor:
   force_heal: False      # 🛡️ Heal first — stop attacking until HP is restored
   add_hp_ratio: 0.2        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
   add_mp_ratio: 0.1       # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
-  add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
+  add_hp_cooldown: 0.1     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
-  fps_limit: 1            # 🚥 Loop rate for the health monitor thread
+  fps_limit: 5            # 🚥 Loop rate for the health monitor thread
   return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
   return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
 
@@ -171,7 +171,7 @@ monster_detect:
   #   - "template_free" (lightest and fastest, but likely to have many wrong detection)
   # 💡 Feel free to test different modes to find what works best for your setup.
   mode: "contour_only"         # 🧠 Options: "color", "grayscale", "contour_only", "template_free"
-  diff_thres: 0.8              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
+  diff_thres: 0.4              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
   search_box_margin: 70        # ➕ Additional margin(in pixels) around the attack box for monster searching
   contour_blur: 5              # 🌫️ Gaussian blur kernel size used for contour smoothing (in "contour_only" mode).
   with_enemy_hp_bar: True      # ❤️ Enable smarter detection using enemy HP bars.
@@ -282,7 +282,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
-  offset: [-30, -30]                  # 📐 Don't set this unless playing on N.A server
+  offset: [0, 0]                  # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
@@ -331,7 +331,7 @@ system:
   fps_limit_route_recorder: 10      # 🚥 Route recorder FPS
   fps_limit_auto_dice_roller: 1     # 🚥 Auto rice roller FPS
   key_debounce_interval: 1          # ⏱️ Cooldown (in seconds) between function key presses (e.g., F1, F2...)
-  show_debug_window: False           # 🐞 Show debug window (disable to save resources)
+  show_debug_window: True           # 🐞 Show debug window (disable to save resources)
   server: "TW"                      # "TW", "NA"
   language: "chinese"               # "english" "chinese"
 
