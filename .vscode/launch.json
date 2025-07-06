@@ -102,6 +102,22 @@
             ]
         },
         {
+            "name": "猴子森林2-owen",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "monkey_swamp_3",
+                "--monster",
+                "zombie_lupin",
+                "--nametag",
+                "owen",
+                "--cfg",
+                "owen"
+            ]
+        },
+        {
             "name": "buff-owen",
             "type": "debugpy",
             "request": "launch",
