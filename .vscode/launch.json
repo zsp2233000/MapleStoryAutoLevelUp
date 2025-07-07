@@ -59,6 +59,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
             "args": [
+                "--attack",
+                "aoe_skill",
                 "--map",
                 "lost_time_1",
                 "--monster",
