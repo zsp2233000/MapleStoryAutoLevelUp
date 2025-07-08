@@ -41,7 +41,7 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["5"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  keys: ["0"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
   cooldown: [600]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
