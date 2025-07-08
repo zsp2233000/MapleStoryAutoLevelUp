@@ -1195,8 +1195,8 @@ class MapleStoryBot:
         '''
         get_random_action - pick a random action except 'up' and teleport command
         '''
-        cmd_left_right = random.choice(["left", "right"])
-        cmd_up_down = "none"
+        cmd_left_right = random.choice(["left", "right", "none"])
+        cmd_up_down = random.choice(["down", "none"])
         cmd_action = random.choice(["jump", "none"])
         logger.warning(f"Perform random command: {cmd_left_right} {cmd_up_down} {cmd_action}")
         return cmd_left_right, cmd_up_down, cmd_action
