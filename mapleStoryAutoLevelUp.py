@@ -1694,6 +1694,13 @@ class MapleStoryBot:
 
         self.profiler.mark("Rune Detection")
 
+        # If entered the game, start solving rune
+        if self.is_in_rune_game():
+            self.solve_rune() # Blocking until runes solved
+            self.switch_status("hunting")
+            # Clear rune finding timer after successful rune solving
+            self.t_rune_finding_start = 0
+
         # Get monster search box
         margin = self.cfg["monster_detect"]["search_box_margin"]
         if self.args.attack == "aoe_skill":
