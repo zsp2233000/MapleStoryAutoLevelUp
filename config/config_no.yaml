@@ -41,7 +41,7 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["5"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  keys: ["0"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
   cooldown: [600]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
@@ -56,7 +56,6 @@ directional_attack:
   range_x: 240               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.05             # ⏱️ Time between attacks (in seconds)
-  character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
 
 # ────────────────
 # 💥 AoE Skill
