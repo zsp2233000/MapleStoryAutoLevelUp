@@ -41,7 +41,7 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["End"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  keys: ["0"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
   cooldown: [600]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
@@ -244,9 +244,9 @@ watchdog:
 # Detects the "Please remove the rune" message on screen.
 # When this warning appears, the bot will pause combat and start searching for the rune instead.
 rune_warning:
-  top_left: [513, 196]        # 🟦 Top-left corner of the rune warning message
+  top_left: [700, 170]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.30             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.5             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -295,7 +295,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
-  offset: [0, 0]                  # 📐 Don't set this unless playing on N.A server
+  offset: [-30, -29]              # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode
