@@ -2,6 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "101-時尚大道西部",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "101_2f_east",
+                "--monster",
+                "blue_perfume",
+                "--attack",
+                "directional",
+                "--nametag",
+                "no",
+                "--cfg",
+                "no"
+            ],
+        },
+        {
             "name": "武陵-熊2-no",
             "type": "debugpy",
             "request": "launch",
@@ -10,7 +28,8 @@
                 "--map",
                 "mu_Lung_wild_bear_area_2",
                 "--monster",
-                "panda,grizzly",
+                // "panda,grizzly",
+                "blue_perfume",
                 "--attack",
                 "directional",
                 "--nametag",

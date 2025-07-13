@@ -248,7 +248,7 @@ watchdog:
 rune_warning:
   top_left: [650, 196]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.25             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.3             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
