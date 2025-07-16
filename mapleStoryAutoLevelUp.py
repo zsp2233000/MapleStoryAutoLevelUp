@@ -1557,6 +1557,11 @@ class MapleStoryBot:
 
         self.profiler.mark("Health Monitor")
 
+        # EXP watchdog: 若EXP超過2分鐘沒變動且目前狀態為hunting，自動切換狀態
+        if self.status == "hunting" and getattr(self.health_monitor, "is_exp_stuck", False):
+            logger.warning("[EXP Watchdog] EXP超過2分鐘沒變動，自動切換狀態為finding_rune！")
+            self.switch_status("finding_rune")
+
         # Check whether "Please remove runes" warning appears on screen
         if self.is_rune_warning():
             self.loc_rune = None

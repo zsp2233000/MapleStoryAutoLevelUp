@@ -85,6 +85,7 @@ health_monitor:
   fps_limit: 20            # 🚥 Loop rate for the health monitor thread
   return_home_if_no_potion: False      # ✅ Use homing scroll when potion is used up
   return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
+  exp_watchdog_timeout: 120           # 🕒 EXP超過幾秒沒變動就觸發自動尋找符文（finding_rune）
 
 # ────────────────
 # 🌀 Mage Teleport

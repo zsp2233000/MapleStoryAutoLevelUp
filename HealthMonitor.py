@@ -19,9 +19,10 @@ class HealthMonitor:
         self.thread = None
 
         # Health monitoring state
-        self.hp_ratio = 1.0
+        self.hp_ratio = 1.0 
         self.mp_ratio = 1.0
         self.exp_ratio = 1.0
+        self.exp_timeout = self.cfg["health_monitor"]["exp_watchdog_timeout"]
 
         # Timers
         self.t_last_heal = 0
@@ -43,6 +44,11 @@ class HealthMonitor:
         self.loc_size_bars = [(0, 0, 0, 0),
                               (0, 0, 0, 0),
                               (0, 0, 0, 0)]
+
+        # EXP watchdog
+        self.t_exp_watch_dog = time.time()
+        self.last_exp_value = None
+        self.is_exp_stuck = False
 
     def start(self):
         '''
@@ -184,6 +190,16 @@ class HealthMonitor:
                 if mp_ratio is not None:
                     self.mp_ratio = mp_ratio
                 if exp_ratio is not None:
+                    # EXP watchdog
+                    if self.last_exp_value is None or abs(exp_ratio - self.last_exp_value) > 1e-4:
+                        self.t_exp_watch_dog = t_cur
+                        self.last_exp_value = exp_ratio 
+                        self.is_exp_stuck = False
+                    else:
+                        if t_cur - self.t_exp_watch_dog > self.exp_timeout:
+                            self.is_exp_stuck = True
+                        else:
+                            self.is_exp_stuck = False
                     self.exp_ratio = exp_ratio
 
                 hp_thres = self.cfg["health_monitor"]["add_hp_ratio"]
