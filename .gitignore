@@ -5,3 +5,5 @@ nametag/
 *.DS_Store
 *.prof
 video/
+*.config_tmp.yaml
+*config_custom.yaml
