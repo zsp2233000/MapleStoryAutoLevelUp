@@ -24,7 +24,7 @@ key:
   jump: "space"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
-  return_home: "8"       # 🔁 Key to use return home scroll.
+  return_home_key: "8"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
 
 # ────────────────
@@ -41,8 +41,8 @@ key:
 # ⚠️ Note: If your pet already provides auto-buff, you can disable this.
 
 buff_skill:
-  keys: ["1","0","4","5",]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [290,600,600,55]              # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  keys: ["9","5"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
+  cooldown: [45,600]              # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -56,7 +56,6 @@ directional_attack:
   range_x: 150               # ↔️ Horizontal attack range (in pixels)
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.3             # ⏱️ Time between attacks (in seconds)
-  character_turn_delay: 0.02 # 🔄 Delay after turning before attacking (in seconds)
 
 # ────────────────
 # 💥 AoE Skill
@@ -110,11 +109,28 @@ edge_teleport:
   color_code: [255, 127, 127]  # 🎨 RGB color code to represent platform edge
 
 # ────────────────
+# ❤️ Party Red Bar Detection
+# ────────────────
+# Detects your character's party red on on the game window to estimate player location.
+# This feature will only turn on when nametag.enable == False
+party_red_bar:
+  lower_red: [0, 60, 60]   # ❤️ HSV, darker red of party health bar
+  upper_red: [0, 100, 100] # ❤️ HSV, brighter red of party health bar
+
+  # 🎯 Offset from the top-left corner of the party red bar to the character center
+  offset: [20, 66]  # in pixels
+  create_party_button_thres: 0.1 # 📏 threshold for create party button matching
+
+# ────────────────
 # 🏷️ NameTag Recognition
 # ────────────────
 # Detects your character's nametag on the game window to estimate player location.
+# This method is computational demending and unreliable in some map.
+# Using party red bar to locate player is almost always a better option
+
 
 nametag:
+  enable: False # Only switch back to 'True' when party red bar detection doesn't work for you
   # 🧪 Comparison mode for matching the nametag:
   #   - "grayscale": match using grayscale image
   #   - "white_mask": match using binarized image
@@ -171,7 +187,7 @@ monster_detect:
   #   - "template_free" (lightest and fastest, but likely to have many wrong detection)
   # 💡 Feel free to test different modes to find what works best for your setup.
   mode: "contour_only"         # 🧠 Options: "color", "grayscale", "contour_only", "template_free"
-  diff_thres: 0.4              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
+  diff_thres: 0.8              # 📏 Diff threshold for template matching, [0.0 ~ 1.0] Higher = stricter match
   search_box_margin: 70        # ➕ Additional margin(in pixels) around the attack box for monster searching
   contour_blur: 5              # 🌫️ Gaussian blur kernel size used for contour smoothing (in "contour_only" mode).
   with_enemy_hp_bar: True      # ❤️ Enable smarter detection using enemy HP bars.
@@ -183,8 +199,9 @@ monster_detect:
 # "": Off
 # "true": Change channel once other player is detected
 # "pixel": Change channel once other player move set pixels in other_player_move_pixel
-auto_change_channel: "pixel"
-other_player_move_pixel: 10  # only work when auto_change_channel == "pixel" 
+channel_change:
+  mode: ""
+  other_player_move_thres: 10  # only work when mode == "pixel"
 
 # ────────────────
 # 🧭 Route Following
@@ -231,9 +248,9 @@ watchdog:
 # Detects the "Please remove the rune" message on screen.
 # When this warning appears, the bot will pause combat and start searching for the rune instead.
 rune_warning:
-  top_left: [660, 186]        # 🟦 Top-left corner of the rune warning message
+  top_left: [700, 170]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.33             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.4             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
 
 # ────────────────
 # ✨ Rune Detection Box
@@ -252,7 +269,7 @@ rune_detect:
 rune_find:
   timeout: 300               # ⏳ Maximum time (in seconds) to keep searching before giving up
                               # If the timeout is reached, the bot will fallback to route_rest.png and rest.
-  timeout_action: "change_channel" # "go_home"
+  timeout_action: "go_home"    # "go_home"
   near_rune_duration: 10       # 🕒 Duration to interact with rune when a positive detection occurs
   rune_trigger_cooldown: 0.3    # 🕒 Cooldown for 'up' key rune trigger
   rune_trigger_distance_x: 20    # only press 'up' when player distance(in pixel) to the rune is close enough.

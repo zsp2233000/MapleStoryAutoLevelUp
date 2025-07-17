@@ -16,7 +16,7 @@
                 "--nametag",
                 "no",
                 "--cfg",
-                "no"
+                "no_101_2f_east"
             ],
         },
         {
@@ -91,17 +91,29 @@
             ]
         },
         {
-            "name": "火焰之地2-owen",
+            "name": "消失的時間1-owen",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
             "args": [
                 "--map",
-                "fire_land_2",
+                "lost_time_1",
                 "--monster",
-                "black_axe_stump,fire_boar",
-                "--nametag",
-                "owen",
+                "evolved_ghost",
+                "--cfg",
+                "owen"
+            ]
+        },
+        {
+            "name": "時間之路2-owen",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "the_path_of_time_1_for_mage",
+                "--monster",
+                "evolved_ghost",
                 "--cfg",
                 "owen"
             ]
