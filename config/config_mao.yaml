@@ -24,7 +24,7 @@ key:
   jump: "v"             # 🦘 Jump key
   add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
-  return_home: "8"       # 🔁 Key to use return home scroll.
+  return_home_key: "8"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
 
 # ────────────────
@@ -42,7 +42,7 @@ key:
 
 buff_skill:
   keys: ["0"]                # ⌨️ List of keys to cast each buff skill (e.g., ["a", "s"])
-  cooldown: [600]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
+  cooldown: [180]            # ⏱️ Cooldown time (in seconds), matches the order of `keys`
   action_cooldown: 1      # 🕒 Delay (in seconds) after buffing before continuing actions
 
 # ────────────────
@@ -82,7 +82,7 @@ health_monitor:
   add_mp_ratio: 0.1        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
   add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
-  fps_limit: 1            # 🚥 Loop rate for the health monitor thread
+  fps_limit: 10            # 🚥 Loop rate for the health monitor thread
   return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
   return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
 
@@ -128,6 +128,7 @@ party_red_bar:
 # Detects your character's nametag on the game window to estimate player location.
 
 nametag:
+  enable: False # Only switch back to 'True' when party red bar detection doesn't work for you
   # 🧪 Comparison mode for matching the nametag:
   #   - "grayscale": match using grayscale image
   #   - "white_mask": match using binarized image
@@ -196,9 +197,9 @@ monster_detect:
 # "": Off
 # "true": Change channel once other player is detected
 # "pixel": Change channel once other player move set pixels in other_player_move_pixel
-auto_change_channel: "pixel"
-other_player_move_pixel: 10  # only work when auto_change_channel == "pixel" 
-
+channel_change:
+  mode: ""
+  other_player_move_thres: 10  # only work when mode == "pixel"
 # ────────────────
 # 🧭 Route Following
 # ────────────────
@@ -211,21 +212,24 @@ route:
   jump_down_cooldown: 3.0     # ⏱️ Cooldown (in seconds) for 'jump down' action to prevent continuous descent
 
   # 🎨 Color-coded(RGB) actions for route navigation
+  # "<left-right command, up-down command, action>"
   color_code:
-    "255,0,0": "walk left"         # 🔴 Red
-    "0,0,255": "walk right"        # 🔵 Blue
-    "255,127,0": "jump left"       # 🟠 Orange
-    "0,255,255": "jump right"      # 🟦 Cyan
-    "127,255,0": "jump down"       # 💚 Lime
-    "255,0,255": "jump"            # 💜 Magenta
-    "127,127,127": "up"            # ⚪ Gray
-    "255,255,127": "down"          # 🟡 Light yellow
-    "0,255,127": "stop"            # 🟢 Light green
-    "255,255,0": "goal"            # 🟨 Yellow
-    "255,0,127": "teleport up"     # 🌸 Pink
-    "127,0,255": "teleport down"   # 🟪 Purple
-    "0,127,0": "teleport left"     # 🟩 Dark green
-    "139,69,19": "teleport right"  # 🟫 Brown
+    "255,0,0": "left none none"         # 🔴 Red
+    "0,0,255": "right none none"        # 🔵 Blue
+    "255,127,0": "left none jump"       # 🟠 Orange
+    "0,255,255": "right none jump"      # 🟦 Cyan
+    "127,255,0": "none down jump"       # 💚 Lime
+    "255,0,255": "none none jump"       # 💜 Magenta
+    "0,255,127": "stop stop stop"       # 🟢 Light green
+    "255,255,0": "none none goal"       # 🟨 Yellow
+    "255,0,127": "none up teleport"     # 🌸 Pink
+    "127,0,255": "none down teleport"   # 🟪 Purple
+    "0,127,0": "left none teleport"     # 🟩 Dark green
+    "139,69,19": "right none teleport"  # 🟫 Brown
+
+  color_code_up_down:
+    "127,127,127": "none up none"       # ⚪ Gray
+    "255,255,127": "none down none"     # 🟡 Light yellow
 
 # ────────────────────────────────
 # 🐶 Watchdog (Anti-Stuck System)
@@ -295,7 +299,7 @@ rune_solver:
 minimap:
   player_color: [136, 255, 255]   # 🟡 BGR value of the yellow player dot on the minimap
   debug_window_upscale: 3         # 🔍 Zoom factor for the route debug image (for visualization only)
-  offset: [-30, -29]              # 📐 Don't set this unless playing on N.A server
+  offset: [0, 0]              # 📐 Don't set this unless playing on N.A server
 
 # ─────────────────────────────
 # 🚶‍♂️ Patrol Mode

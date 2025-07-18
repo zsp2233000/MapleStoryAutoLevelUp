@@ -73,7 +73,7 @@
             ]
         },
         {
-            "name": "消失的時間1-killlua",
+            "name": "消失的時間1-killua",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
@@ -180,30 +180,18 @@
             ]
         },
         {
-            "name": "Debug Legacy MapleStory Bot",
+            "name": "龍族狩獵場-mao",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/mapleStoryAutoLevelUp_legacy.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
-        },
-        {
-            "name": "Debug Route Recorder",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/routeRecorder.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "drake_hunting_ground",
+                "--monster",
+                "drake",
+                "--cfg",
+                "mao"
+            ]
         },
     ]
 }
