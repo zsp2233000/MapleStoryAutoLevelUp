@@ -11,6 +11,7 @@ import cv2
 # Local Import
 from src.utils.logger import logger
 from src.utils.common import get_bar_percent
+from src.input.KeyBoardController import press_key
 
 class HealthMonitor:
     '''
@@ -192,7 +193,7 @@ class HealthMonitor:
                             logger.warning(f"[Health Monitor] HP({self.hp_percent:.1f}%) < {hp_thres:.1f}% "
                                            f"for {round(t_cur - self.t_hp_watch_dog, 2)} seconds.")
                             logger.warning(f"[Health Monitor] Return home because potion is used up.")
-                            self.kb.press_key(self.cfg["key"]["return_home"]) # Return home
+                            press_key(self.cfg["key"]["return_home"]) # Return home
                             self.is_terminated = True # Terminate Health monitor
                             self.kb.is_terminated = True # Terminate AutoBot
                     # MP watchdog 機制
@@ -224,7 +225,7 @@ class HealthMonitor:
         Execute heal action
         '''
         try:
-            self.kb.press_key(self.cfg["key"]["add_hp"], 0.05)
+            press_key(self.cfg["key"]["add_hp"], 0.05)
         except Exception as e:
             logger.error(f"[Health Monitor] Heal action failed: {e}")
 
@@ -233,7 +234,7 @@ class HealthMonitor:
         Execute MP recovery action
         '''
         try:
-            self.kb.press_key(self.cfg["key"]["add_mp"], 0.05)
+            press_key(self.cfg["key"]["add_mp"], 0.05)
         except Exception as e:
             logger.error(f"[Health Monitor] MP action failed: {e}")
 
