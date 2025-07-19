@@ -78,9 +78,9 @@ aoe_skill:
 health_monitor:
   enable: True             # ✅ Enable or disable health monitor
   force_heal: False      # 🛡️ Heal first — stop attacking until HP is restored
-  add_hp_ratio: 0.2        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
+  add_hp_ratio: 0.4        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
   add_mp_ratio: 0.1        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
-  add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
+  add_hp_cooldown: 0.2     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
   fps_limit: 10            # 🚥 Loop rate for the health monitor thread
   return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
@@ -250,7 +250,8 @@ watchdog:
 rune_warning:
   top_left: [700, 170]        # 🟦 Top-left corner of the rune warning message
   bottom_right: [768, 236]    # 🟥 Bottom-right corner of the rune warning
-  diff_thres: 0.5             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  # diff_thres: 0.5             # 📏 Matching threshold [0.0 ~ 1.0], higher = stricter match
+  diff_thres: 0.4             # 📏 龍族狩獵場
 
 # ────────────────
 # ✨ Rune Detection Box
