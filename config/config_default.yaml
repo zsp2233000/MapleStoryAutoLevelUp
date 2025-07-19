@@ -26,7 +26,7 @@ key:
   jump: "space"             # 🦘 Jump key
   add_hp: "1"               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: "2"               # 💧 Use MP potion. Set to "" to disable auto-mana
-  return_home_key: "home"       # 🔁 Key to use return home scroll.
+  return_home: "home"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
 
 buff_skill:

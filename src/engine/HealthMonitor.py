@@ -197,14 +197,14 @@ class HealthMonitor:
                             self.is_terminated = True # Terminate Health monitor
                             self.kb.is_terminated = True # Terminate AutoBot
                     # MP watchdog 機制
-                    if self.mp_ratio >= mp_thres:
+                    if self.mp_percent >= mp_thres:
                         self.t_mp_watch_dog = t_cur # reset mp watchdog
                     else:
                         if t_cur - self.t_mp_watch_dog > watchdog_timeout:
-                            logger.warning(f"[Health Monitor]: MP({self.mp_ratio*100:.1f}%) < {mp_thres*100:.1f}% "
+                            logger.warning(f"[Health Monitor]: MP({self.mp_percent*100:.1f}%) < {mp_thres*100:.1f}% "
                                            f"for {round(t_cur - self.t_mp_watch_dog, 2)} seconds.")
                             logger.warning(f"[Health Monitor]: Return home because MP potion is used up.")
-                            self.kb.press_key(self.cfg["key"]["return_home"]) # Return home
+                            press_key(self.cfg["key"]["return_home"]) # Return home
                             self.is_terminated = True # Terminate Health monitor
                             self.kb.is_terminated = True # Terminate AutoBot
                 # Check if need MP (with cooldown)
