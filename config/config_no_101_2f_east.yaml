@@ -22,7 +22,7 @@ key:
   directional_attack: "a"   # ⚔️ Basic directional attack (e.g., Magic Claw or throwing stars)
   teleport: ""             # 🌀 Teleport skill. Set to "" if not usable
   jump: "space"             # 🦘 Jump key
-  add_hp: ""               # ❤️ Use HP potion. Set to "" to disable auto-healing
+  add_hp: "7"               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: ""               # 💧 Use MP potion. Set to "" to disable auto-mana
   return_home: "8"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
@@ -53,7 +53,8 @@ buff_skill:
 # These settings are applied when launching the program with: --attack "directional_attack"
 
 directional_attack:
-  range_x: 120               # ↔️ Horizontal attack range (in pixels)
+  # range_x: 120               # ↔️ Horizontal attack range (in pixels)
+  range_x: 340               # 丟飛鏢
   range_y: 70                # ↕️ Vertical attack range (in pixels)
   cooldown: 0.05             # ⏱️ Time between attacks (in seconds)
 
@@ -77,11 +78,11 @@ aoe_skill:
 health_monitor:
   enable: True             # ✅ Enable or disable health monitor
   force_heal: False      # 🛡️ Heal first — stop attacking until HP is restored
-  add_hp_ratio: 0.2        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
+  add_hp_ratio: 0.3        # ❤️ Drink HP potion when HP drops below this ratio [0.0 ~ 1.0]
   add_mp_ratio: 0.1        # 💙 Drink MP potion when MP drops below this ratio [0.0 ~ 1.0]
   add_hp_cooldown: 0.5     # 🕒 Seconds to wait between HP potions, prevent potion spam
   add_mp_cooldown: 0.5     # 🕒 Seconds to wait between MP potions, prevent potion spam
-  fps_limit: 1            # 🚥 Loop rate for the health monitor thread
+  fps_limit: 10            # 🚥 Loop rate for the health monitor thread
   return_home_if_no_potion: True      # ✅ Use homing scroll when potion is used up
   return_home_watch_dog_timeout: 3     # 🕒 Duration to detect HP is lower than "add_hp_ratio"
 

@@ -26,7 +26,7 @@ key:
   jump: "space"             # 🦘 Jump key
   add_hp: "1"               # ❤️ Use HP potion. Set to "" to disable auto-healing
   add_mp: "2"               # 💧 Use MP potion. Set to "" to disable auto-mana
-  return_home: "home"       # 🔁 Key to use return home scroll.
+  return_home_key: "home"       # 🔁 Key to use return home scroll.
   party: "p"                # ⌨️ Party window shortcut
 
 buff_skill:
@@ -270,7 +270,7 @@ route_recoder:
   # It records the player's movement and actions, then saves them as a route map image.
   blob_cooldown: 0.7        # ⏱️ Cooldown in seconds between recording actions like 'jump' or 'teleport'
                             #     These actions are marked as a "blob" on the route map
-  map_padding: 0           # 🖤 Padding (in pixels) added as margin around the edge of the map
+  map_padding: 30           # 🖤 Padding (in pixels) added as margin around the edge of the map
 
 game_window:
   # 🪟 Game Window

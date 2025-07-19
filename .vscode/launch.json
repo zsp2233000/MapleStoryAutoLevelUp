@@ -16,7 +16,7 @@
                 "--nametag",
                 "no",
                 "--cfg",
-                "no"
+                "no_101_2f_east"
             ],
         },
         {
@@ -73,7 +73,7 @@
             ]
         },
         {
-            "name": "消失的時間1-killlua",
+            "name": "消失的時間1-killua",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
@@ -91,17 +91,29 @@
             ]
         },
         {
-            "name": "火焰之地2-owen",
+            "name": "消失的時間1-owen",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
             "args": [
                 "--map",
-                "fire_land_2",
+                "lost_time_1",
                 "--monster",
-                "black_axe_stump,fire_boar",
-                "--nametag",
-                "owen",
+                "evolved_ghost",
+                "--cfg",
+                "owen"
+            ]
+        },
+        {
+            "name": "時間之路2-owen",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "the_path_of_time_1_for_mage",
+                "--monster",
+                "evolved_ghost",
                 "--cfg",
                 "owen"
             ]
@@ -168,30 +180,18 @@
             ]
         },
         {
-            "name": "Debug Legacy MapleStory Bot",
+            "name": "龍族狩獵場-mao",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/mapleStoryAutoLevelUp_legacy.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
-        },
-        {
-            "name": "Debug Route Recorder",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/routeRecorder.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {},
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${command:python.interpreterPath}",
-            "stopOnEntry": false,
-            "justMyCode": false
+            "program": "${workspaceFolder}/mapleStoryAutoLevelUp.py",
+            "args": [
+                "--map",
+                "drake_hunting_ground",
+                "--monster",
+                "drake",
+                "--cfg",
+                "mao"
+            ]
         },
     ]
 }
