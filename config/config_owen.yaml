@@ -1,14 +1,15 @@
 bot:
-  map: drake_hunting_ground
+  map: north_forest_training_ground_8
 buff_skill:
   cooldown:
   - 45
   - 600
   keys:
   - '9'
-  - '5'
+  - '0'
 directional_attack:
   range_x: 150
+  range_y: 150
 edge_teleport:
   enable: false
 game_window:
@@ -27,13 +28,13 @@ key:
   return_home: '8'
   teleport: space
 monster_detect:
-  diff_thres: 0.7
+  search_box_margin: 30
 route:
   search_range: 5
 rune_detect:
   debug: true
 rune_warning_cn:
-  diff_thres: 0.4
+  diff_thres: 0.3
 system:
   fps_limit_main: 15
 watchdog:
