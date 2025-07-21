@@ -8,15 +8,17 @@ buff_skill:
   - '9'
   - '0'
 directional_attack:
+  cooldown: 0.1
   range_x: 150
   range_y: 150
 edge_teleport:
   enable: false
 game_window:
   size:
-  - 759
+  - 700
   - 1282
 health_monitor:
+  add_hp_percent: 40
   add_mp_percent: 20
   fps_limit: 10
   return_home_if_no_potion: true

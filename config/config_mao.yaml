@@ -1,10 +1,9 @@
 bot:
-  map: land_of_wild_boar
-channel_change:
-  enable: true
+  map: north_forest_training_ground_8
 directional_attack:
   cooldown: 0.1
   range_x: 300
+  range_y: 150
 edge_teleport:
   enable: false
 game_window:
@@ -20,17 +19,12 @@ key:
   add_hp: b
   add_mp: b
   aoe_skill: s
-  directional_attack: s
+  directional_attack: a
   jump: v
   return_home: '8'
   teleport: space
-minimap:
-  offset:
-  - -30
-  - -29
 monster_detect:
-  diff_thres: 0.5
-  mode: template_free
+  search_box_margin: 30
 route:
   search_range: 5
 rune_detect:
