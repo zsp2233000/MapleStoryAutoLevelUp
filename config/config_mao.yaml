@@ -8,18 +8,19 @@ edge_teleport:
   enable: false
 game_window:
   size:
-  - 759
+  - 700
   - 1282
 health_monitor:
+  add_hp_cooldown: 0.3
   add_hp_percent: 40
   add_mp_percent: 20
   fps_limit: 10
   return_home_if_no_potion: true
 key:
-  add_hp: b
+  add_hp: '4'
   add_mp: b
   aoe_skill: s
-  directional_attack: a
+  directional_attack: s
   jump: v
   return_home: '8'
   teleport: space
@@ -27,12 +28,11 @@ monster_detect:
   search_box_margin: 30
 route:
   search_range: 5
-rune_detect:
-  debug: true
 rune_warning_cn:
   diff_thres: 0.3
 system:
   fps_limit_main: 15
 watchdog:
   last_attack_timeout: 300
+  last_attack_timeout_action: go_home
   timeout: 3
