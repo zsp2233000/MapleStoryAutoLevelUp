@@ -1,4 +1,5 @@
 # Maple Story Auto Level Up
+[English](README.md) | [繁體中文](README.zh.md)
 
 An auto leveling up bot for Maple Story Artale
 
@@ -6,7 +7,24 @@ An auto leveling up bot for Maple Story Artale
 
 [▶ Watch demo on YouTube](https://www.youtube.com/watch?v=QeEXLHO8KN4)
 
-This work purely-based on Computer Vision technique, it doesn't required access game's memory. Instead, it detects image pattern(i.e., player red health bar and monsters) on game window screen and send simulated keyboard command to the game to control player's character.
+## Download
+[![Latest Release](https://img.shields.io/github/v/release/KenYu910645/MapleStoryAutoLevelUp)](https://github.com/KenYu910645/MapleStoryAutoLevelUp/releases/latest)
+
+📥 **[Download the latest version here](https://github.com/KenYu910645/MapleStoryAutoLevelUp/releases/latest)**
+
+## Run on Windows
+1. Run MapleStory World and make sure the game is on windowed mode and game window size is resized to smallest
+2. Turn on minimap on the top-left corner in the game.
+3. Create a party in the game(press 'P' and click 'build'), and make sure a red bar shows on top of your character
+4. Navigate your character to map you want to farm
+5. **[Download the latest release](https://github.com/KenYu910645/MapleStoryAutoLevelUp/releases/latest)**
+6. Unzip the MapleStoryAutoLevelUp.zip and run MapleStoryAutoLevelUp.exe
+7. Adjust configuration on main tab in the UI
+8. press 'Start' button or 'F1' to start the script
+9. Have fun!
+
+## Features
+This work purely-based on Computer Vision technique, it doesn't required access game's memory. Instead, it detects image pattern(i.e., player red health bar and mobs) on game window screen and send simulated keyboard command to the game to control player's character.
 
 ✅ No game's memory access required
 
@@ -30,31 +48,28 @@ This work purely-based on Computer Vision technique, it doesn't required access 
 
 ✅ Auto dice rolling for character creation
 
+✅ Support global/taiwan Artale server
+
+✅ Support English and Traditional Chinese Language
+
 ## Environment
-* Windows11
+* Windows11/MacOS
 * Python3.12
 * OpenCV4.11
 
 Note: this project DOES NOT support virtual environment(VM), it's only for recreational and academical use.
 
 ## Supported MapleStory Version
-This project is mostly developed and tested on MapleStory Artale Taiwan Server
+This project is mostly developed and tested on MapleStory Artale Taiwan Server and Global Server
 
-It also supports global server, select config/config_global.yaml in load config in window
+## Run(Only for Developers)
 
-## Install dependency
+### Install dependency
 ```
 pip install -r requirements.txt
 ```
 
-## Preparation
-1. Run MapleStory and make sure the game is on windowed mode and game window size is resized to smallest
-2. Turn on minimap on the top-left corner of the game window
-3. Create a party in the game(press 'P' and click 'build'), and make sure a red bar shows on top of your character
-
-## Run
-
-### Run with UI (Recommand)
+### Run with UI (Recommend)
 Run command
 ```
 python -m src.main
@@ -63,10 +78,10 @@ Press 'F1' or 'start' button to start auto bot
 
 Tune the configuration to suit your character
 
-Note that the advanced settings is still work in prograss.
+Note that the advanced settings is still work in progress.
 If you need to change advanced configs, please modify config_default.yaml
 
-### Run wihtout UI (Developer Only)
+### Run without UI
 #### Run script
 ```
 python -m src.engine.MapleStoryAutoLevelUp
@@ -83,15 +98,15 @@ python -m src.engine.MapleStoryAutoLevelUp --disable_viz
 ```
 python -m src.engine.MapleStoryAutoLevelUp --record
 ```
-#### Choose map via config.yaml
+#### Choose map via config_custom.yaml
 Edit your map selection in the config file:
 ```
 # In config/config_default.yaml
 bot:
   map: ""  # Set the map name. See available maps in config/config_data.yaml
 ```
-* Press 'F1' to pasue/continue the script control
-* Press 'F2' to take a screenshot, which will be saved to scrennshot/
+* Press 'F1' to pause/continue the script control
+* Press 'F2' to take a screenshot, which will be saved to screenshot/
 * Press 'F12' to terminate script
 
 ## Supported Map
@@ -99,7 +114,7 @@ Please refer to config/config_data.yaml
 
 ## Want to Make a New Map? → Route Recorder
 
-To design a custom route more easily, you can use the `routeRecorder.py` script.
+To design a custom route map, you can use the `routeRecorder.py` script.
 It listens to your keyboard inputs and records them onto a route map.
 
 Use the following command in your terminal to start recording:
@@ -114,7 +129,12 @@ python -m tools.routeRecorder --new_map <map_directory_name>
 | `F3` | Save current route map and start a new one |
 | `F4` | Save the current map to map.png            |
 
-* Remember to add mobs to map by registering it to config/config_data.yaml
+* Please register mobs in config/config_data.yaml after creating a new map. 
+* If this is a big map, it's recommended to scan the map first instead of start record route right away.
+  Operate your character in the game and make sure you explore the whole map.
+* Press 'F4' to update the current scanned map to debug window. If you are satisfied with current map, proceed to record route by pressing 'F3', it will refresh the whole route map.
+* When recording route map, you can attack mobs on the way as the attack key won't be recorded.
+* Typically, a raw record route map won't work very well. Use Paint tool to edit the route map, and fine tune the route
 
 ## Want to Make a New Monster? → Mob Maker
 
@@ -137,7 +157,7 @@ The monster actions such as `hit`, `move`, `skill`, and `stand` are retained. Wh
 Once the download is complete, you can find the downloaded image in the `monster/{MonsterName}` folder.
 
 ## Auto Dice Roller
-An light-weighted auto-bot that help you roll the dice in character creation page.
+Auto Dice Roller help you roll the dice in character creation page.
 
 User can assign the desire attributes and let the script do the job for you
 
@@ -146,11 +166,12 @@ python -m tools.AutoDiceRoller --attribute <STR,DEX,INT,LUK>
 
 Example: for creating a full-INT wizard character:
 python -m tools.AutoDiceRoller --attribute 4,4,13,4
-支援問號模糊能力值
+
+Example: question mark is allowed if you don't want to assign a value
 python -m tools.AutoDiceRoller --attribute 4,4,?,?
 ```
 ## Discord
-Join the Discord for more detail discussions
+Join our Discord server for more discussions
 
 https://discord.gg/DqjtJGNEx7
 
@@ -163,7 +184,7 @@ Therefore, I developed a new localization scheme based on minimap, and all the p
 ```
 python -m src.legacy.mapleStoryAutoLevelUp_legacy.py --map <name_of_the_map> --monsters <name_of_the_monsters> --attack <skill>
 
-Exmaple:
+Example:
 python -m src.legacy.mapleStoryAutoLevelUp_legacy.py --map lost_time_1 --monsters evolved_ghost --attack aoe_skill
 ```
 
