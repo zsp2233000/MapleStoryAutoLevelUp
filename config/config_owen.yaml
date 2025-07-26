@@ -1,12 +1,14 @@
 bot:
-  map: north_forest_training_ground_8
+  map: garden_of_green_2
 buff_skill:
   cooldown:
   - 45
   - 600
+  - 160
   keys:
   - '9'
   - '0'
+  - '3'
 directional_attack:
   cooldown: 0.1
   range_x: 150
@@ -18,6 +20,7 @@ game_window:
   - 700
   - 1282
 health_monitor:
+  add_hp_cooldown: 0.3
   add_hp_percent: 40
   add_mp_percent: 20
   fps_limit: 10
@@ -31,6 +34,8 @@ key:
   teleport: space
 monster_detect:
   search_box_margin: 30
+nametag:
+  mode: histogram_eq
 route:
   search_range: 5
 rune_detect:
@@ -41,4 +46,5 @@ system:
   fps_limit_main: 15
 watchdog:
   last_attack_timeout: 300
+  last_attack_timeout_action: go_home
   timeout: 3
