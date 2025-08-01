@@ -1,15 +1,19 @@
 bot:
-  map: north_forest_training_ground_8
+  map: lost_time_1
+buff_skill:
+  cooldown:
+  - 600
+  keys:
+  - '0'
 directional_attack:
-  cooldown: 0.1
+  cooldown: 0.07
   range_x: 300
   range_y: 150
 edge_teleport:
   enable: false
-game_window:
-  size:
-  - 700
-  - 1282
+email:
+  enable: true
+  receiver_email: zsp2233001@gmailcom
 health_monitor:
   add_hp_cooldown: 0.3
   add_hp_percent: 40
@@ -20,16 +24,21 @@ key:
   add_hp: '4'
   add_mp: b
   aoe_skill: s
-  directional_attack: s
-  jump: v
+  directional_attack: a
   return_home: '8'
   teleport: space
 monster_detect:
   search_box_margin: 30
+nametag:
+  mode: histogram_eq
 route:
   search_range: 5
+rune_detect:
+  debug: true
 rune_warning_cn:
   diff_thres: 0.3
+scheduled_channel_switching:
+  interval_seconds: 10
 system:
   fps_limit_main: 15
 watchdog:

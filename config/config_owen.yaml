@@ -1,24 +1,21 @@
 bot:
-  map: garden_of_green_2
+  map: black_mountain
 buff_skill:
   cooldown:
-  - 45
-  - 600
   - 160
+  - 600
   keys:
-  - '9'
+  - '7'
   - '0'
-  - '3'
 directional_attack:
   cooldown: 0.1
   range_x: 150
   range_y: 150
 edge_teleport:
   enable: false
-game_window:
-  size:
-  - 700
-  - 1282
+email:
+  enable: true
+  receiver_email: zsp2233001@gmailcom
 health_monitor:
   add_hp_cooldown: 0.3
   add_hp_percent: 40
@@ -32,8 +29,12 @@ key:
   directional_attack: r
   return_home: '8'
   teleport: space
+minimap:
+  offset:
+  - -30
+  - -30
 monster_detect:
-  search_box_margin: 30
+  search_box_margin: 70
 nametag:
   mode: histogram_eq
 route:
@@ -42,6 +43,8 @@ rune_detect:
   debug: true
 rune_warning_cn:
   diff_thres: 0.3
+scheduled_channel_switching:
+  interval_seconds: 10
 system:
   fps_limit_main: 15
 watchdog:
