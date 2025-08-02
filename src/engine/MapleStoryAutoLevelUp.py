@@ -1248,7 +1248,7 @@ class MapleStoryAutoBot:
             except Exception as e:
                 logger.warning(f"Exception occurred while waiting for login button: {e}")
                 if not is_mac():
-                    resize_window(window_title, width=1296, height=759)
+                    resize_window(window_title)
                 logger.info("Retrying login button detection...")
 
             time.sleep(3)

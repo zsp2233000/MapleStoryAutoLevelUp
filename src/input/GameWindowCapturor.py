@@ -37,7 +37,7 @@ class GameWindowCapturor:
         # Get game window title
         self.window_title = get_game_window_title_by_token(cfg["game_window"]["title"])
 
-        resize_window(self.window_title, width=1296, height=759)
+        resize_window(self.window_title)
         
         if self.window_title is None:
             raise RuntimeError(

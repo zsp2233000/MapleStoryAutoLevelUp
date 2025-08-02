@@ -831,7 +831,7 @@ def normalize_pixel_coordinate(coord, window_size):
 
     return (norm_x, norm_y)
 
-def resize_window(window_title, width=1296, height=759):
+def resize_window(window_title, width=1298, height=767):
     # 取得視窗句柄
     hwnd = win32gui.FindWindow(None, window_title)
     if hwnd == 0:
