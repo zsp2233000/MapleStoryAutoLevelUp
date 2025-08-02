@@ -1,15 +1,21 @@
 bot:
-  map: black_mountain
+  map: 101_2f_east
 buff_skill:
   cooldown:
-  - 160
+  - 290
+  - 290
+  - 240
   - 600
   keys:
-  - '7'
+  - '3'
+  - '4'
+  - '5'
   - '0'
+channel_change:
+  enable: true
 directional_attack:
   cooldown: 0.1
-  range_x: 150
+  range_x: 320
 edge_teleport:
   enable: false
 email:
@@ -17,22 +23,21 @@ email:
   receiver_email: zsp2233001@gmailcom
 health_monitor:
   add_hp_cooldown: 0.3
-  add_hp_percent: 40
+  add_hp_percent: 60
   add_mp_percent: 20
+  force_heal: true
   fps_limit: 10
   return_home_if_no_potion: true
 key:
-  add_hp: b
+  add_hp: s
   add_mp: b
   aoe_skill: r
-  directional_attack: r
+  directional_attack: a
+  jump: v
   return_home: '8'
   teleport: space
-minimap:
-  offset:
-  - -30
-  - -30
 monster_detect:
+  diff_thres: 0.4
   search_box_margin: 70
 nametag:
   mode: histogram_eq
@@ -47,6 +52,6 @@ scheduled_channel_switching:
 system:
   fps_limit_main: 15
 watchdog:
-  last_attack_timeout: 300
+  last_attack_timeout: 600
   last_attack_timeout_action: go_home
   timeout: 3
