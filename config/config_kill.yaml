@@ -1,5 +1,5 @@
 bot:
-  map: 101_2f_east
+  map: first_barrack
 buff_skill:
   cooldown:
   - 290
@@ -11,11 +11,9 @@ buff_skill:
   - '4'
   - '5'
   - '0'
-channel_change:
-  enable: true
 directional_attack:
   cooldown: 0.1
-  range_x: 320
+  range_x: 200
 edge_teleport:
   enable: false
 email:
@@ -23,7 +21,7 @@ email:
   receiver_email: zsp2233001@gmailcom
 health_monitor:
   add_hp_cooldown: 0.3
-  add_hp_percent: 60
+  add_hp_percent: 40
   add_mp_percent: 20
   force_heal: true
   fps_limit: 10
@@ -32,12 +30,15 @@ key:
   add_hp: s
   add_mp: b
   aoe_skill: r
-  directional_attack: a
+  directional_attack: s
   jump: v
   return_home: '8'
   teleport: space
+minimap:
+  offset:
+  - -30
+  - -25
 monster_detect:
-  diff_thres: 0.4
   search_box_margin: 70
 nametag:
   mode: histogram_eq
