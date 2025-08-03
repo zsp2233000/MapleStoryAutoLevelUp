@@ -12,8 +12,8 @@ buff_skill:
   - '5'
   - '0'
 directional_attack:
-  cooldown: 0.1
-  range_x: 200
+  cooldown: 0.05
+  range_x: 150
 edge_teleport:
   enable: false
 email:
@@ -21,7 +21,7 @@ email:
   receiver_email: zsp2233001@gmailcom
 health_monitor:
   add_hp_cooldown: 0.3
-  add_hp_percent: 40
+  add_hp_percent: 30
   add_mp_percent: 20
   force_heal: true
   fps_limit: 10
@@ -39,6 +39,7 @@ minimap:
   - -30
   - -25
 monster_detect:
+  diff_thres: 0.5
   search_box_margin: 70
 nametag:
   mode: histogram_eq
