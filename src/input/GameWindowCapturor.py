@@ -7,16 +7,17 @@ import time
 import threading
 
 # Libarary Import
-from windows_capture import WindowsCapture, Frame, InternalCaptureControl
+import mss
 import cv2
+import numpy as np
 
 # local import
 from src.utils.logger import logger
-from src.utils.common import get_game_window_title_by_token, load_image, resize_window
+from src.utils.common import get_game_window_title_by_token, load_image, resize_window, get_window_rect
 
 class GameWindowCapturor:
     '''
-    GameWindowCapturor
+    GameWindowCapturor using mss for better VMware compatibility
     '''
     def __init__(self, cfg, test_image_name = None):
         self.cfg = cfg
@@ -28,6 +29,9 @@ class GameWindowCapturor:
         self.t_last_run = 0.0
         self.capture_control = None
         self.window_title = ""
+        self.window_rect = None
+        self.capture_thread = None
+        self.sct = None
 
         # If use test image as input, disable the whole capture thread
         if test_image_name is not None:
@@ -46,31 +50,50 @@ class GameWindowCapturor:
         else:
             logger.info(f"[GameWindowCapturor] Found game window title: {self.window_title}")
 
-        # Create capture handler
-        self.capture = WindowsCapture(window_name=self.window_title)
-        self.capture.event(self.on_frame_arrived)
-        self.capture.event(self.on_closed)
+        # Get window rectangle for mss capture
+        self.window_rect = get_window_rect(self.window_title)
+        if self.window_rect is None:
+            raise RuntimeError(
+                f"[GameWindowCapturor] Unable to get window rectangle for: {self.window_title}"
+            )
+
+        # Create mss instance
+        self.sct = mss.mss()
 
         # Start capturing thread
-        self.capture_control = self.capture.start_free_threaded()
+        self.is_terminated = False
+        self.capture_thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self.capture_thread.start()
 
         logger.info("[GameWindowCapturor] Init done")
 
-    def on_frame_arrived(self, frame: Frame,
-                         capture_control: InternalCaptureControl):
+    def _capture_loop(self):
         '''
-        Frame arrived callback: store frame into buffer with lock.
+        Main capture loop running in separate thread
         '''
-        with self.lock:
-            self.frame = frame.frame_buffer
-        self.limit_fps()
+        while not self.is_terminated:
+            try:
+                # Update window rectangle in case window moved
+                current_rect = get_window_rect(self.window_title)
+                if current_rect:
+                    self.window_rect = current_rect
 
-    def on_closed(self):
-        '''
-        Capture closed callback.
-        '''
-        logger.warning("[GameWindowCapturor] closed.")
-        cv2.destroyAllWindows()
+                # Capture screenshot
+                screenshot = self.sct.grab(self.window_rect)
+                
+                # Convert to numpy array and then to BGR format
+                frame = np.array(screenshot)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+                
+                # Store frame with lock
+                with self.lock:
+                    self.frame = frame
+                
+                self.limit_fps()
+                
+            except Exception as e:
+                logger.error(f"[GameWindowCapturor] Capture error: {e}")
+                time.sleep(0.1)  # Brief pause on error
 
     def get_frame(self):
         '''
@@ -79,14 +102,17 @@ class GameWindowCapturor:
         with self.lock:
             if self.frame is None:
                 return None
-            return cv2.cvtColor(self.frame, cv2.COLOR_BGRA2BGR)
+            return self.frame.copy()
 
     def stop(self):
         '''
         Stop capturing thread
         '''
-        if self.capture_control is not None:
-            self.capture_control.stop()
+        self.is_terminated = True
+        if self.capture_thread and self.capture_thread.is_alive():
+            self.capture_thread.join(timeout=2.0)
+        if self.sct:
+            self.sct.close()
         logger.info("[GameWindowCapturor] Terminated")
 
     def limit_fps(self):

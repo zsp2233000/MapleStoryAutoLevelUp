@@ -845,3 +845,35 @@ def resize_window(window_title, width=1298, height=767):
     # 調整視窗大小
     win32gui.MoveWindow(hwnd, x, y, width, height, True)
     print(f"已將「{window_title}」調整為 {width}x{height}")
+
+def get_window_rect(window_title):
+    '''
+    Get window rectangle (left, top, right, bottom) for mss capture
+    '''
+    if is_windows():
+        hwnd = win32gui.FindWindow(None, window_title)
+        if hwnd == 0:
+            return None
+        rect = win32gui.GetWindowRect(hwnd)
+        # Return as dict for mss compatibility: {"left": x, "top": y, "width": w, "height": h}
+        return {
+            "left": rect[0],
+            "top": rect[1], 
+            "width": rect[2] - rect[0],
+            "height": rect[3] - rect[1]
+        }
+    else:
+        # For macOS, use pygetwindow
+        try:
+            windows = gw.getWindowsWithTitle(window_title)
+            if windows:
+                win = windows[0]
+                return {
+                    "left": win.left,
+                    "top": win.top,
+                    "width": win.width,
+                    "height": win.height
+                }
+        except:
+            pass
+        return None

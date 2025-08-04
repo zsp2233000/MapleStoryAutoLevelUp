@@ -8,5 +8,5 @@ PySide6
 ruamel.yaml
 pyinstaller
 pywin32; sys_platform == "win32"
-windows-capture ; sys_platform == "win32"
+mss
 pyobjc-framework-Quartz ; sys_platform == "darwin" # TODO: dev macOS in another branch
