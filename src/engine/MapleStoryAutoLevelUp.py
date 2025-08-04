@@ -1200,6 +1200,13 @@ class MapleStoryAutoBot:
 
         # Update image frame
         self.img_frame = self.get_img_frame()
+        
+        # Check if frame capture failed
+        if self.img_frame is None:
+            logger.warning("[ensure_is_in_party] Failed to capture game frame, skipping party check")
+            # close party window
+            press_key(self.cfg["key"]["party"])
+            return
 
         # Find the 'create party' button
         loc_enable, score_enable, _ = find_pattern_sqdiff(

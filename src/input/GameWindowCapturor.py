@@ -7,9 +7,9 @@ import time
 import threading
 
 # Libarary Import
-import mss
 import cv2
 import numpy as np
+from mss import mss
 
 # local import
 from src.utils.logger import logger
@@ -31,7 +31,6 @@ class GameWindowCapturor:
         self.window_title = ""
         self.window_rect = None
         self.capture_thread = None
-        self.sct = None
 
         # If use test image as input, disable the whole capture thread
         if test_image_name is not None:
@@ -57,9 +56,6 @@ class GameWindowCapturor:
                 f"[GameWindowCapturor] Unable to get window rectangle for: {self.window_title}"
             )
 
-        # Create mss instance
-        self.sct = mss.mss()
-
         # Start capturing thread
         self.is_terminated = False
         self.capture_thread = threading.Thread(target=self._capture_loop, daemon=True)
@@ -78,22 +74,25 @@ class GameWindowCapturor:
                 if current_rect:
                     self.window_rect = current_rect
 
-                # Capture screenshot
-                screenshot = self.sct.grab(self.window_rect)
-                
-                # Convert to numpy array and then to BGR format
-                frame = np.array(screenshot)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-                
-                # Store frame with lock
-                with self.lock:
-                    self.frame = frame
+                # Use 'with' statement to ensure mss resources are properly managed
+                with mss() as sct:
+                    # Capture screenshot
+                    screenshot = sct.grab(self.window_rect)
+                    
+                    # Convert to numpy array and then to BGR format
+                    frame = np.array(screenshot)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+                    
+                    # Store frame with lock
+                    with self.lock:
+                        self.frame = frame
                 
                 self.limit_fps()
                 
             except Exception as e:
                 logger.error(f"[GameWindowCapturor] Capture error: {e}")
-                time.sleep(0.1)  # Brief pause on error
+                # Add a longer delay on error to avoid overwhelming the system
+                time.sleep(0.5)  # Brief pause on error
 
     def get_frame(self):
         '''
@@ -111,8 +110,6 @@ class GameWindowCapturor:
         self.is_terminated = True
         if self.capture_thread and self.capture_thread.is_alive():
             self.capture_thread.join(timeout=2.0)
-        if self.sct:
-            self.sct.close()
         logger.info("[GameWindowCapturor] Terminated")
 
     def limit_fps(self):

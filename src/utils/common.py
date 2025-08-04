@@ -261,6 +261,11 @@ def draw_rectangle(img, top_left, size, color, text,
     - color: Tuple (B, G, R), color of the rectangle and text.
     - text: String to display above the rectangle.
     '''
+    # Check if img is None
+    if img is None:
+        logger.warning("[draw_rectangle] Input image is None, skipping drawing")
+        return
+        
     bottom_right = (top_left[0] + size[1],
                     top_left[1] + size[0])
     cv2.rectangle(img, top_left, bottom_right, color, thickness)
@@ -271,6 +276,11 @@ def pad_to_size(img, size, pad_value=0):
     '''
     pad_to_size
     '''
+    # Check if img is None
+    if img is None:
+        logger.warning("[pad_to_size] Input image is None, returning None")
+        return None
+        
     h_img, w_img = img.shape[:2]
     h_target, w_target = size
 
@@ -313,8 +323,22 @@ def find_pattern_sqdiff(
     - min_val: The matching score (lower = better for SQDIFF_NORMED).
     - bool: local search success or not
     '''
+    # Check if input images are None
+    if img is None:
+        logger.warning("[find_pattern_sqdiff] Input image is None, returning default values")
+        return (0, 0), 1.0, False
+    
+    if img_pattern is None:
+        logger.warning("[find_pattern_sqdiff] Pattern image is None, returning default values")
+        return (0, 0), 1.0, False
+
     # Padding if img is smaller than pattern
     img = pad_to_size(img, img_pattern.shape[:2])
+    
+    # Check if padding failed (returned None)
+    if img is None:
+        logger.warning("[find_pattern_sqdiff] Padding failed, returning default values")
+        return (0, 0), 1.0, False
 
     # search last result location first to speedup
     h, w = img_pattern.shape[:2]
