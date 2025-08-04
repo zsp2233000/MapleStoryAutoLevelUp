@@ -948,6 +948,7 @@ class MapleStoryAutoBot:
                 text = f"Unexpeted window size: {frame_no_title.shape[:2]} (expect window ratio 16:9)\n"
                 text += "Please use windowed mode & smallest resolution."
                 logger.error(text)
+                resize_window(self.capture.window_title)
                 return
         else:
             # Other mode only allow specific resolution
@@ -956,6 +957,7 @@ class MapleStoryAutoBot:
                        f"(expect {self.cfg['game_window']['size']})\n"
                 text += "Please use windowed mode & smallest resolution."
                 logger.error(text)
+                resize_window(self.capture.window_title)
                 return
 
         return cv2.resize(frame_no_title, WINDOW_WORKING_SIZE,
@@ -1437,6 +1439,7 @@ class MapleStoryAutoBot:
         # Find the 'login' button
         loc, score, _ = find_pattern_sqdiff(
                         img_roi, self.img_login_button)
+        logger.info(f"btn score = {score}")
         if score < self.cfg["ui_coords"]["login_button_thres"]:
             h, w = self.img_login_button.shape[:2]
             logger.info(f"[get_login_button_location] Found login button with score({score})")

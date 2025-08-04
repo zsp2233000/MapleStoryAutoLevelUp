@@ -261,10 +261,6 @@ def draw_rectangle(img, top_left, size, color, text,
     - color: Tuple (B, G, R), color of the rectangle and text.
     - text: String to display above the rectangle.
     '''
-    # Check if img is None
-    if img is None:
-        logger.warning("[draw_rectangle] Input image is None, skipping drawing")
-        return
         
     bottom_right = (top_left[0] + size[1],
                     top_left[1] + size[0])
