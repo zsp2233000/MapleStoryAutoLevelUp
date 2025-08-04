@@ -1241,7 +1241,7 @@ class MapleStoryAutoBot:
         click_in_game_window(window_title, ui_coords["menu"])
         time.sleep(1)
         click_in_game_window(window_title, ui_coords["channel"])
-        time.sleep(1)
+        time.sleep(5)
         click_in_game_window(window_title, ui_coords["random_channel"])
         time.sleep(1)
         click_in_game_window(window_title, ui_coords["random_channel_confirm"])
@@ -1254,21 +1254,18 @@ class MapleStoryAutoBot:
                 loc_login_button = self.get_login_button_location()
                 if loc_login_button is None:
                     logger.info("Waiting for login button to show up...")
+                    time.sleep(3)
+                else:
+                    logger.info(f"login_button button found: {loc_login_button}")
+                    time.sleep(3)
+                    click_in_game_window(window_title, loc_login_button)
             except Exception as e:
                 logger.warning(f"Exception occurred while waiting for login button: {e}")
                 if not is_mac():
                     resize_window(window_title)
                 logger.info("Retrying login button detection...")
-
-            time.sleep(3)
-        logger.info(f"login_button button found: {loc_login_button}")
-
-        time.sleep(3)  # wait the screen to be brighter
-
-        # Click login button
-        click_in_game_window(window_title, loc_login_button)
+                
         time.sleep(2)
-
         # Click "Select Character"
         click_in_game_window(window_title, ui_coords["select_character"])
         time.sleep(5)
