@@ -57,6 +57,7 @@ class MapleStoryAutoBot:
         self.idx_routes = 0 # Index of route map
         self.monsters_info = {} # monster information
         self.monsters = [] # monster detected in current frame
+        self.monster_detect_counter = 0  # 用於跳幀偵測怪物
         self.fps = 0 # Frame per second
         self.red_dot_center_prev = None # previous other player location in minimap
         self.video_writer = None # For video recording feature
@@ -1484,6 +1485,11 @@ class MapleStoryAutoBot:
             self.cmd_action = "jump"
 
     def update_cmd_by_mob_detection(self):
+        # 每3幀才執行一次怪物偵測以改善VM效能
+        self.monster_detect_counter = (self.monster_detect_counter + 1) % 3
+        if self.monster_detect_counter != 0:
+            return  # 跳過此幀的怪物偵測
+            
         # Get monster search box
         margin = self.cfg["monster_detect"]["search_box_margin"]
         if self.cfg["bot"]["attack"] == "aoe_skill":
