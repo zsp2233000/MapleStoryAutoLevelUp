@@ -1257,7 +1257,7 @@ class MapleStoryAutoBot:
         click_in_game_window(window_title, ui_coords["menu"])
         time.sleep(1)
         click_in_game_window(window_title, ui_coords["channel"])
-        time.sleep(5)
+        time.sleep(8)
         click_in_game_window(window_title, ui_coords["random_channel"])
         time.sleep(1)
         click_in_game_window(window_title, ui_coords["random_channel_confirm"])
