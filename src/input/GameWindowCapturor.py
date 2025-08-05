@@ -34,7 +34,10 @@ class GameWindowCapturor:
 
         # If use test image as input, disable the whole capture thread
         if test_image_name is not None:
-            self.frame = load_image(f"test/{test_image_name}.png")
+            # Load test image and convert to BGRA format for consistency
+            bgr_image = load_image(f"test/{test_image_name}.png")
+            # Add alpha channel to match mss format
+            self.frame = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2BGRA)
             return
 
         # Get game window title
@@ -79,11 +82,10 @@ class GameWindowCapturor:
                     # Capture screenshot
                     screenshot = sct.grab(self.window_rect)
                     
-                    # Convert to numpy array and then to BGR format
+                    # Convert to numpy array (BGRA format)
                     frame = np.array(screenshot)
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
                     
-                    # Store frame with lock
+                    # Store frame with lock (keep as BGRA, convert in get_frame)
                     with self.lock:
                         self.frame = frame
                 
@@ -101,7 +103,9 @@ class GameWindowCapturor:
         with self.lock:
             if self.frame is None:
                 return None
-            return self.frame.copy()
+            
+            # All frames are now in BGRA format, convert to BGR
+            return cv2.cvtColor(self.frame, cv2.COLOR_BGRA2BGR)
 
     def stop(self):
         '''
