@@ -8,6 +8,7 @@ buff_skill:
   - '7'
   - '0'
 channel_change:
+  enable: true
   mode: 'true'
 directional_attack:
   cooldown: 0.1
@@ -18,6 +19,10 @@ edge_teleport:
 email:
   enable: true
   receiver_email: zsp2233001@gmailcom
+game_window:
+  size:
+  - 708
+  - 1298
 health_monitor:
   add_hp_cooldown: 0.3
   add_hp_percent: 40
@@ -32,8 +37,14 @@ key:
   directional_attack: r
   return_home: '8'
   teleport: space
+minimap:
+  offset:
+  - 2
+  - 0
 monster_detect:
   diff_thres: 0.4
+  search_box_margin: 70
+  skip_frames: 3
 nametag:
   mode: histogram_eq
 route:
@@ -46,6 +57,8 @@ scheduled_channel_switching:
   interval_seconds: 10
 system:
   fps_limit_main: 15
+ui_coords:
+  login_button_thres: 0.06
 watchdog:
   last_attack_timeout: 300
   last_attack_timeout_action: go_home

@@ -12,8 +12,8 @@ buff_skill:
   - '5'
   - '0'
 channel_change:
-  enable: true
   mode: 'true'
+  other_player_move_thres: 30
 directional_attack:
   cooldown: 0.05
   range_x: 150
@@ -46,7 +46,9 @@ minimap:
   - -30
   - -25
 monster_detect:
+  diff_thres: 0.7
   search_box_margin: 70
+  skip_frames: 3
 nametag:
   mode: histogram_eq
 route:

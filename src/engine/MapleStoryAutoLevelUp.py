@@ -58,6 +58,9 @@ class MapleStoryAutoBot:
         self.monsters_info = {} # monster information
         self.monsters = [] # monster detected in current frame
         self.monster_detect_counter = 0  # 用於跳幀偵測怪物
+        # 緩存debug資訊（用於每幀繪製，不受跳幀影響）
+        self.cached_detection_box = None  # 緩存的偵測範圍框
+        self.cached_monsters = []  # 緩存的怪物列表
         self.fps = 0 # Frame per second
         self.red_dot_center_prev = None # previous other player location in minimap
         self.video_writer = None # For video recording feature
@@ -907,15 +910,26 @@ class MapleStoryAutoBot:
                     "score": 1.0,
                 })
 
-        # Debug
-        # Draw attack detection range
-        draw_rectangle(
-            self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
-            (255, 0, 0), "Mob Detection Box"
-        )
+        return monsters
 
-        # Draw monsters bounding box
-        for monster in monsters:
+    def draw_monster_detection_debug(self):
+        """
+        繪製怪物偵測的debug資訊到debug圖像上
+        這個函數每幀都會執行，使用緩存的偵測結果，確保不會閃爍
+        """
+        if not self.is_show_debug_window or self.img_frame_debug is None:
+            return
+
+        # 繪製偵測範圍框（使用緩存資料）
+        if self.cached_detection_box is not None:
+            x0, y0, x1, y1 = self.cached_detection_box
+            draw_rectangle(
+                self.img_frame_debug, (x0, y0), (y1-y0, x1-x0),
+                (255, 0, 0), "Mob Detection Box"
+            )
+
+        # 繪製怪物邊界框（使用緩存資料）
+        for monster in self.cached_monsters:
             if monster["name"] == "Health Bar":
                 color = (0, 255, 255)
             else:
@@ -925,8 +939,6 @@ class MapleStoryAutoBot:
                 self.img_frame_debug, monster["position"], monster["size"],
                 color, str(round(monster['score'], 2))
             )
-
-        return monsters
 
     def get_img_frame(self):
         '''
@@ -1181,6 +1193,9 @@ class MapleStoryAutoBot:
         # Print command on screen
         cv2.putText(self.img_frame_debug, f"Cmd: {self.cmd_move_x} {self.cmd_move_y} {self.cmd_action}",
                     (10, 430), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+
+        # 繪製怪物偵測debug資訊（每幀執行，使用緩存資料）
+        self.draw_monster_detection_debug()
 
     def update_img_frame_debug(self):
         '''
@@ -1509,6 +1524,10 @@ class MapleStoryAutoBot:
 
         # Get monsters in the search box
         self.monsters = self.get_monsters_in_range((x0, y0), (x1, y1))
+        
+        # 緩存debug資訊（偵測範圍框和怪物列表）
+        self.cached_detection_box = (x0, y0, x1, y1)
+        self.cached_monsters = self.monsters.copy()
 
         # Check if no mob to attack
         if len(self.monsters) == 0:
