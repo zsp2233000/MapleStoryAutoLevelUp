@@ -178,8 +178,8 @@ route:
   color_code:
     "255,0,0": "left none none"         # 🔴 Red
     "0,0,255": "right none none"        # 🔵 Blue
-    "255,127,0": "left none jump"       # 🟠 Orange
-    "0,255,255": "right none jump"      # 🟦 Cyan
+    "255,127,0": "left up jump"       # 🟠 Orange
+    "0,255,255": "right up jump"      # 🟦 Cyan
     "127,255,0": "none down jump"       # 💚 Lime
     "255,0,255": "none none jump"       # 💜 Magenta
     "0,255,127": "stop stop stop"       # 🟢 Light green
