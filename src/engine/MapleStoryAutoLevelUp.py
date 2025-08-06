@@ -1203,8 +1203,6 @@ class MapleStoryAutoBot:
         '''
         cv2.imshow("Game Window Debug",
             self.img_frame_debug[:self.cfg["ui_coords"]["ui_y_start"], :])
-        # Update FPS timer
-        self.t_last_frame = time.time()
 
     def ensure_is_in_party(self):
         '''
@@ -1501,7 +1499,7 @@ class MapleStoryAutoBot:
 
     def update_cmd_by_mob_detection(self):
         # 每3幀才執行一次怪物偵測以改善VM效能
-        self.monster_detect_counter = (self.monster_detect_counter + 1) % 3
+        self.monster_detect_counter = (self.monster_detect_counter + 1) % 2
         if self.monster_detect_counter != 0:
             return  # 跳過此幀的怪物偵測
             
@@ -1572,6 +1570,9 @@ class MapleStoryAutoBot:
         '''
         Process one game window frame
         '''
+        # Update FPS timer at the beginning of each frame
+        self.t_last_frame = time.time()
+        
         # Start profiler for performance debugging
         self.profiler.start()
 
@@ -1774,9 +1775,6 @@ class MapleStoryAutoBot:
                         interpolation=cv2.INTER_NEAREST)
 
         self.profiler.mark("Debug Window Show")
-
-        # Update FPS timer
-        self.t_last_frame = time.time()
 
         # Print profiler result
         if self.cfg["profiler"]["enable"] and \
