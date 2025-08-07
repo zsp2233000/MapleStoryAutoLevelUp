@@ -158,9 +158,9 @@ ui_coords:
   # Buttons and menu cooridinate in game window
   # Expect all these coordinate is on orignal window size (get it from frame screenshot)
   ui_y_start: 610                       # 📐 UI y start
-  "menu": [1140, 730]                   # 📐 Menu coordinate on game window UI
-  "channel": [1140, 666]                # 📐 Channel button coordinate
-  "random_channel": [877, 161]          # 📐 Random channel button in the channel selection menu
+  "menu": [1233,95]                   # 📐 Menu coordinate on game window UI
+  "channel": [379, 578]                # 📐 Channel button coordinate
+  "random_channel": [590, 460]          # 📐 Random channel button in the channel selection menu
   "random_channel_confirm": [585, 420]  # 📐 Confirm button after clicking channel switch
   "select_character": [888, 275]        # 📐 Select character button during login
   login_button_thres: 0.05              # 📏 threshold to detect a login button on game window

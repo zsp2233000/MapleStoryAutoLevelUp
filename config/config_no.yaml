@@ -1,19 +1,10 @@
 bot:
   map: dragon_territory
-buff_skill:
-  cooldown:
-  - 160
-  - 600
-  keys:
-  - '7'
-  - '0'
 channel_change:
   enable: true
-  mode: 'true'
 directional_attack:
   cooldown: 0.1
   range_x: 240
-  range_y: 100
 edge_teleport:
   enable: false
 email:
@@ -42,7 +33,6 @@ minimap:
   - 2
   - 0
 monster_detect:
-  diff_thres: 0.4
   search_box_margin: 70
   skip_frames: 3
 nametag:
@@ -52,7 +42,7 @@ route:
 rune_detect:
   debug: true
 rune_warning_cn:
-  diff_thres: 0.3
+  diff_thres: 0.4
 scheduled_channel_switching:
   interval_seconds: 10
 system:
